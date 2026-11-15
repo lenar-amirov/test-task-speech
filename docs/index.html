@@ -4,162 +4,251 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>DataTasks Speech QC</title>
-<meta name="description" content="Live prototype: automatic quality check for read-speech recordings, phone + server.">
+<meta name="description" content="Prototype: automatic quality check for read-speech recordings, phone plus server. Record a sentence and get a verdict.">
+<meta name="theme-color" content="#c1f11d">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&display=swap" rel="stylesheet">
 <style>
+  /* World: the contributor app this check lives in. Lime band, white sheet, grey task cards, black type, lime action. */
   :root {
-    --bg: #f6f6f1; --surface: #ffffff; --ink: #17181a; --muted: #62645e; --line: #e2e2d8;
-    --ok: #2f7d32; --ok-bg: #e5f3e1; --bad: #b23a22; --bad-bg: #fbe6df; --accent: #4b49c6; --accent-bg: #e9e8fb;
-    --warn-bg: #fff4d6; --bar: #d9d9cf; --font: "Inter", system-ui, sans-serif; --display: "Space Grotesk", "Inter", system-ui, sans-serif;
+    --lime: #c1f11d; --lime-deep: #a9d80f; --lime-soft: #eefbc4;
+    --ink: #141414; --ink-2: #3d3d3d; --muted: #4f4f4f; --line: #e6e6e6;
+    --sheet: #ffffff; --tile: #f3f3f3; --tile-2: #ebebeb;
+    --ok: #217a1b; --ok-bg: #e4f7c9; --bad: #b42a12; --bad-bg: #fde6df; --warn-bg: #fff6d9; --warn-ink: #7a5a00;
+    --r-sheet: 36px; --r-card: 24px; --r-pill: 999px;
+    --font: "Montserrat", system-ui, sans-serif;
+    color-scheme: light;
   }
-  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
-    --bg: #141513; --surface: #1d1f1c; --ink: #ecece6; --muted: #a3a59c; --line: #33352f;
-    --ok: #7cc77f; --ok-bg: #1f3320; --bad: #f08a72; --bad-bg: #3a221c; --accent: #a9a7ff; --accent-bg: #2a2950; --warn-bg: #3a3218; --bar: #3a3c36; color-scheme: dark } }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 var(--font); }
-  .wrap { max-width: 1020px; margin: 0 auto; padding: 28px max(16px, env(safe-area-inset-right)) 56px max(16px, env(safe-area-inset-left)); display: flex; flex-direction: column; gap: 22px; }
-  h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; }
-  h1 { font-size: 30px; } h2 { font-size: 20px; } h3 { font-size: 15px; }
-  .lede { color: var(--muted); max-width: 70ch; margin: 6px 0 0; }
-  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px; min-width: 0; }
-  .eyebrow { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
-  .note { font-size: 13px; color: var(--muted); }
-  .kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 14px; }
-  .kpi { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px; }
-  .kpi b { display: block; font-family: var(--display); font-size: 26px; }
-  .kpi span { font-size: 12.5px; color: var(--muted); }
-  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
-  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; padding: 3px; gap: 2px; background: var(--bg); }
-  .seg button { border: 0; background: transparent; color: var(--ink); padding: 6px 14px; border-radius: 999px; font: inherit; font-weight: 600; cursor: pointer; }
-  .seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
-  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
-  .chip { border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 999px; padding: 6px 12px; font: inherit; font-size: 13.5px; cursor: pointer; }
-  .chip[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-bg); font-weight: 600; }
-  .prompt { font-size: 21px; line-height: 1.4; font-family: var(--display); margin: 8px 0 4px; }
-  .howto { background: var(--warn-bg); border-radius: 8px; padding: 8px 12px; font-size: 14px; margin-top: 10px; }
-  .row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
-  .btn { font: inherit; font-weight: 600; border-radius: 999px; border: 1px solid var(--ink); background: var(--ink); color: var(--bg); padding: 10px 18px; cursor: pointer; }
-  .btn.rec { background: var(--bad); border-color: var(--bad); color: #fff; }
-  .btn.ghost { background: transparent; color: var(--ink); border-color: var(--line); font-weight: 500; }
-  .btn:disabled { opacity: .5; cursor: default; }
-  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  .timer { font-variant-numeric: tabular-nums; color: var(--muted); }
-  .verdict { display: inline-block; font-weight: 700; padding: 3px 12px; border-radius: 999px; }
-  .verdict.ok { background: var(--ok-bg); color: var(--ok); } .verdict.bad { background: var(--bad-bg); color: var(--bad); }
-  .panel { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; margin-top: 12px; }
-  .panel.server { background: var(--accent-bg); border-color: transparent; }
+  html { scrollbar-color: #c9c9c9 transparent; }
+  body { margin: 0; background: var(--lime); color: var(--ink); font: 500 15px/1.55 var(--font); -webkit-font-smoothing: antialiased; }
+  ::selection { background: var(--lime); color: var(--ink); }
+  a { color: var(--ink); text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 3px; text-decoration-color: var(--lime-deep); }
+  a:hover { text-decoration-color: var(--ink); }
+  :focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; border-radius: 10px; }
+  h1, h2, h3 { margin: 0; font-weight: 800; letter-spacing: -0.02em; text-wrap: balance; }
+  h1 { font-size: clamp(34px, 5.2vw, 56px); line-height: 1.05; }
+  h2 { font-size: clamp(24px, 3vw, 32px); line-height: 1.15; }
+  h3 { font-size: 17px; line-height: 1.3; letter-spacing: -0.01em; }
+  p { margin: 0; }
+  .muted { color: var(--muted); }
+  .small { font-size: 13px; }
+  .num { font-variant-numeric: tabular-nums; }
+
+  .top { max-width: 1240px; margin: 0 auto; padding: 14px max(20px, env(safe-area-inset-right)) 18px max(20px, env(safe-area-inset-left)); display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .brand { font-weight: 700; font-size: 14px; }
+  .langs { display: inline-flex; background: var(--sheet); border-radius: var(--r-pill); padding: 4px; gap: 2px; }
+  .langs button { font: 700 14px var(--font); border: 0; background: transparent; color: var(--ink); padding: 8px 14px; border-radius: var(--r-pill); cursor: pointer; min-height: 40px; }
+  .langs button[aria-pressed="true"] { background: var(--ink); color: #fff; }
+
+  .sheet { background: var(--sheet); border-radius: var(--r-sheet) var(--r-sheet) 0 0; min-height: 100vh; }
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 0 max(20px, env(safe-area-inset-right)) 0 max(20px, env(safe-area-inset-left)); }
+  section { padding: 44px 0; }
+  section + section { border-top: 1px solid var(--line); }
+
+  .hero { padding-top: 40px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+  .hero p.lead { font-size: 18px; color: var(--ink-2); margin-top: 16px; max-width: 46ch; }
+  .result { background: var(--tile); border-radius: var(--r-card); padding: 22px 24px; }
+  .result .row2 { display: flex; gap: 28px; margin: 6px 0 12px; }
+  .result b { display: block; font-size: clamp(24px, 3vw, 32px); font-weight: 800; letter-spacing: -0.03em; line-height: 1; }
+  .result span { font-size: 13.5px; color: var(--ink-2); }
+
+  /* the task: the app's own card */
+  .task-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 22px; align-items: start; }
+  .task { background: var(--tile); border-radius: var(--r-card); padding: 22px; }
+  .task-head { display: flex; gap: 14px; align-items: center; }
+  .ico { width: 52px; height: 52px; flex: none; border-radius: 16px; background: var(--sheet); display: grid; place-items: center; }
+  .ico svg { width: 26px; height: 26px; }
+  .pay { margin-left: auto; font-weight: 700; white-space: nowrap; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+  .chip { font: 600 14px var(--font); border: 0; background: var(--sheet); color: var(--ink); border-radius: var(--r-pill); padding: 10px 16px; cursor: pointer; min-height: 44px; transition: background .15s, transform .1s; }
+  .chip:hover { background: var(--tile-2); }
+  .chip:active { transform: scale(.97); }
+  .chip[aria-pressed="true"] { background: var(--ink); color: #fff; }
+  .prompt-box { background: var(--sheet); border-radius: 18px; padding: 18px; margin-top: 16px; }
+  .prompt { font-size: 22px; font-weight: 700; line-height: 1.35; letter-spacing: -0.01em; margin-top: 6px; }
+  .howto { margin-top: 12px; background: var(--warn-bg); color: var(--warn-ink); border-radius: 14px; padding: 10px 14px; font-size: 14px; }
+  .howto strong { color: var(--ink); }
+  .linkbtn { font: 600 14px var(--font); background: none; border: 0; padding: 10px 0 0; color: var(--ink); cursor: pointer; display: inline-flex; gap: 6px; align-items: center; min-height: 44px; }
+  .linkbtn svg { width: 16px; height: 16px; }
+  .cta { width: 100%; margin-top: 16px; font: 700 17px var(--font); border: 0; border-radius: 20px; background: var(--lime); color: var(--ink); min-height: 60px; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; transition: background .15s, transform .1s; }
+  .cta:hover { background: var(--lime-deep); }
+  .cta:active { transform: scale(.985); }
+  .cta svg { width: 22px; height: 22px; }
+  .cta.recording { background: var(--ink); color: #fff; }
+  .cta .dot { width: 10px; height: 10px; border-radius: 50%; background: #ff5a3c; animation: pulse 1s ease-in-out infinite; }
+  @keyframes pulse { 50% { opacity: .35; } }
+  .sub { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+  .upload { font: 600 14px var(--font); color: var(--ink); cursor: pointer; text-decoration: underline; text-decoration-color: var(--lime-deep); text-decoration-thickness: 2px; text-underline-offset: 3px; min-height: 44px; display: inline-flex; align-items: center; }
+
+  .verdict-col { display: flex; flex-direction: column; gap: 14px; }
+  .card { border: 1px solid var(--line); border-radius: var(--r-card); padding: 20px; background: var(--sheet); }
+  .card.server { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .card.server .muted { color: #b9b9b9; }
+  .card h3 { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  .card h3 small { font-size: 12.5px; font-weight: 600; color: var(--muted); }
+  .card.server h3 small { color: #b9b9b9; }
+  .pill { white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; font-weight: 700; padding: 6px 14px; border-radius: var(--r-pill); font-size: 15px; }
+  .pill svg { width: 16px; height: 16px; }
+  .pill.ok { background: var(--ok-bg); color: var(--ok); }
+  .pill.bad { background: var(--bad-bg); color: var(--bad); }
+  .card.server .pill.ok { background: var(--lime); color: var(--ink); }
+  .vline { margin-top: 12px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; }
+  .heard { margin-top: 14px; font-size: 16px; }
+  .heard i { font-style: normal; font-weight: 700; }
+  .facts { margin-top: 14px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .facts div { background: rgba(255,255,255,.08); border-radius: 14px; padding: 10px 12px; }
+  .facts b { display: block; font-size: 20px; font-weight: 800; }
+  .facts span { font-size: 12px; color: #b9b9b9; }
+  .match { margin-top: 12px; font-size: 13.5px; display: flex; gap: 8px; align-items: flex-start; }
+  .match svg { width: 16px; height: 16px; flex: none; margin-top: 2px; }
+  .empty { color: var(--muted); }
   table { border-collapse: collapse; width: 100%; font-size: 13.5px; font-variant-numeric: tabular-nums; }
-  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
-  th { font-size: 11.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
-  .scroll { overflow-x: auto; }
-  audio { width: 100%; margin-top: 10px; }
-  /* architecture */
-  .arch { display: grid; grid-template-columns: 1fr 2fr; gap: 14px; margin-top: 14px; }
-  .zone { border: 1px dashed var(--line); border-radius: 12px; padding: 12px; }
-  .zone > .eyebrow { margin-bottom: 8px; }
-  .steps { display: flex; flex-direction: column; gap: 8px; }
-  .srv { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .node { border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 10px 12px; transition: border-color .2s, background .2s; }
-  .node b { display: block; font-size: 14px; }
-  .node span { font-size: 12.5px; color: var(--muted); }
-  .node .ms { float: right; font-size: 12px; font-variant-numeric: tabular-nums; color: var(--accent); font-weight: 600; }
-  .node.active { border-color: var(--accent); background: var(--accent-bg); }
-  .node.done { border-color: var(--ok); }
-  .node.fail { border-color: var(--bad); }
-  .flow { font-size: 12.5px; color: var(--muted); margin-top: 10px; }
-  .feed td:nth-child(1) { white-space: nowrap; color: var(--muted); }
-  .tag { font-size: 11.5px; border-radius: 6px; padding: 1px 6px; background: var(--bg); border: 1px solid var(--line); }
-  ul.limits { margin: 8px 0 0; padding-left: 18px; }
-  a { color: var(--accent); }
-  @media (max-width: 760px) { .grid2, .arch, .srv { grid-template-columns: 1fr; } .kpis { grid-template-columns: 1fr; } h1 { font-size: 25px; } }
-  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+  th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: 12px; color: var(--muted); font-weight: 600; }
+  .scroll { overflow-x: auto; margin-top: 12px; }
+  #feedtbl { min-width: 640px; }
+  #feedtbl td:first-child { white-space: nowrap; }
+  audio { width: 100%; margin-top: 4px; }
+  .note-box { margin-top: 12px; font-size: 13.5px; color: var(--ink-2); }
+
+  /* how it works: two lanes */
+  .lanes { display: grid; grid-template-columns: 1fr 1.6fr; gap: 20px; margin-top: 24px; }
+  .lane { background: var(--tile); border-radius: var(--r-card); padding: 18px; }
+  .lane h3 { margin-bottom: 12px; }
+  .steps { display: grid; gap: 8px; }
+  .lane.srv .steps { grid-template-columns: 1fr 1fr; }
+  .step { background: var(--sheet); border-radius: 16px; padding: 12px 14px; border: 2px solid transparent; transition: border-color .25s, background .25s; }
+  .step b { display: flex; justify-content: space-between; gap: 8px; font-size: 14.5px; }
+  .step .ms { font-weight: 700; font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .step span.d { display: block; font-size: 13px; color: var(--muted); margin-top: 2px; }
+  .step.active { border-color: var(--lime-deep); background: var(--lime-soft); }
+  .step.done { border-color: var(--lime-deep); }
+  .step.fail { border-color: var(--bad); }
+  .step.wide { grid-column: 1 / -1; }
+  .scale { margin-top: 16px; color: var(--ink-2); max-width: 80ch; }
+  code { font: 600 0.92em ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--tile); padding: 1px 6px; border-radius: 6px; }
+
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+  ul.limits { margin: 14px 0 0; padding: 0; list-style: none; color: var(--ink-2); }
+  ul.limits li { border-top: 2px solid var(--lime); padding-top: 8px; }
+  ul.limits li + li { margin-top: 14px; }
+  footer { padding: 28px 0 48px; border-top: 1px solid var(--line); font-size: 13px; color: var(--muted); }
+
+  @media (max-width: 860px) {
+    .hero, .task-grid, .lanes, .two { grid-template-columns: 1fr; }
+    .lane.srv .steps { grid-template-columns: 1fr; }
+    section { padding: 32px 0; }
+    .hero { padding-top: 28px; }
+    :root { --r-sheet: 28px; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <div class="eyebrow">DataTasks · Build prototype · live</div>
-    <h1>Speech QC: is this recording good enough to pay for?</h1>
-    <p class="lede">Contributors read a sentence aloud on their phone. Before we pay for it and ship it to a buyer, this check decides: accept or re-record, with a reason the contributor sees. Try it with your own voice in English or Russian, including the mistakes contributors make.</p>
-    <div class="kpis">
-      <div class="kpi"><b>97%</b><span>of bad recordings caught (145 of 150)</span></div>
-      <div class="kpi"><b>2%</b><span>of good recordings wrongly rejected (3 of 150)</span></div>
-      <div class="kpi"><b id="stat-total">–</b><span id="stat-label">checks run on this server so far</span></div>
-    </div>
-    <p class="note" style="margin-top:8px">Measured once, with frozen thresholds, on 300 real recordings the tuning never saw (FLEURS: Spanish, Kazakh, Urdu; Whisper small). Targets were ≥90% and ≤5%. English and Russian here are for trying it yourself; they are not in these numbers.</p>
-  </header>
+<header class="top">
+  <span class="brand">DataTasks speech check</span>
+  <div class="langs" role="group" aria-label="Recording language">
+    <button type="button" data-lang="en" aria-pressed="true">EN</button>
+    <button type="button" data-lang="ru" aria-pressed="false">RU</button>
+  </div>
+</header>
 
-  <section class="card" aria-labelledby="try">
-    <h2 id="try">Record a sentence</h2>
-    <div class="grid2" style="margin-top:12px">
+<main class="sheet">
+  <div class="wrap">
+    <section class="hero" aria-labelledby="h1">
       <div>
-        <div class="seg" role="group" aria-label="Language">
-          <button type="button" data-lang="en" aria-pressed="true">English</button>
-          <button type="button" data-lang="ru" aria-pressed="false">Русский</button>
-        </div>
-        <div class="eyebrow" style="margin-top:16px">1 · Choose what to do</div>
-        <div class="chips" id="scenarios" role="group" aria-label="Scenario"></div>
-        <div class="eyebrow" style="margin-top:16px">2 · The sentence the app asks for</div>
-        <p class="prompt" id="prompt"></p>
-        <button type="button" class="chip" id="another">Another sentence</button>
-        <div class="howto" id="howto"></div>
-        <div class="row">
-          <button type="button" class="btn rec" id="recbtn">● Record</button>
-          <span class="timer" id="timer"></span>
-          <label class="btn ghost" style="cursor:pointer">Upload a file<input type="file" id="file" accept="audio/*" hidden></label>
-        </div>
-        <p class="note" id="micnote" style="margin-top:8px">The browser will ask for your microphone. Recording stops by itself after 30 seconds.</p>
+        <h1 id="h1">Is this recording good enough to pay for?</h1>
+        <p class="lead">Drivers and passengers read a sentence into their phone for a few tenge. Before we pay and ship it to a buyer, this check answers: accept, or re-record with a reason. Try it with your own voice.</p>
       </div>
-      <div id="out" aria-live="polite">
-        <div class="eyebrow">3 · Verdict</div>
-        <p class="note">Record or upload, and the verdict appears here: first from the phone checks, a second later from the server.</p>
+      <div class="result">
+        <p><strong>Tested on 300 recordings it never saw</strong></p>
+        <div class="row2">
+          <div><b class="num">97%</b><span>bad ones caught<br>145 of 150</span></div>
+          <div><b class="num">2%</b><span>good ones rejected<br>3 of 150</span></div>
+        </div>
+        <p class="small muted">Targets ≥90% and ≤5%. Thresholds frozen before the test. FLEURS Spanish, Kazakh, Urdu.</p>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <section class="card" aria-labelledby="arch">
-    <h2 id="arch">How it works</h2>
-    <p class="lede">Two layers. Cheap checks run on the phone, so a bad take is re-recorded on the spot and never uploaded. The server re-checks everything, because a phone can be tampered with, then runs speech recognition. Steps light up as your recording goes through.</p>
-    <div class="arch">
-      <div class="zone">
-        <div class="eyebrow">Contributor's phone (this browser)</div>
-        <div class="steps">
-          <div class="node" id="n-rec"><span class="ms"></span><b>Record</b><span>16 kHz mono WAV</span></div>
-          <div class="node" id="n-phone"><span class="ms"></span><b>Phone checks</b><span>length, silence, clipping, loudness, noise</span></div>
-          <div class="node" id="n-upload"><span class="ms"></span><b>Upload</b><span>audio + the prompt shown</span></div>
+    <section aria-labelledby="try">
+      <h2 id="try">Record a sentence</h2>
+      <div class="task-grid">
+        <div class="task">
+          <div class="task-head">
+            <div class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></div>
+            <div><h3>Read the text aloud</h3><p class="small muted">About 10 seconds</p></div>
+          </div>
+          <div class="chips" id="scenarios" role="group" aria-label="What to try"></div>
+          <div class="prompt-box">
+            <p class="small muted">The app asks you to read</p>
+            <p class="prompt" id="prompt"></p>
+            <button type="button" class="linkbtn" id="another"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.6-6.4M21 4v5h-5"/></svg>Another sentence</button>
+          </div>
+          <p class="howto" id="howto"></p>
+          <button type="button" class="cta" id="recbtn"></button>
+          <div class="sub">
+            <span class="small muted" id="micnote">Your browser asks for the microphone. Stops by itself after 30 s.</span>
+            <label class="upload">Upload a file instead<input type="file" id="file" accept="audio/*" hidden></label>
+          </div>
+        </div>
+        <div class="verdict-col" id="out" aria-live="polite">
+          <div class="card"><h3>Verdict</h3><p class="empty" style="margin-top:8px">Record, and the phone checks answer at once. The server answers a second later with what it heard.</p></div>
         </div>
       </div>
-      <div class="zone">
-        <div class="eyebrow">Server · Supabase edge function <code>qc-check</code></div>
-        <div class="srv">
-          <div class="node" id="n-signal"><span class="ms"></span><b>Re-check signal</b><span>same checks; never trust the phone</span></div>
-          <div class="node" id="n-storage"><span class="ms"></span><b>Store recording</b><span>Supabase Storage, private bucket</span></div>
-          <div class="node" id="n-asr"><span class="ms"></span><b>Speech recognition</b><span>Whisper: language + words</span></div>
-          <div class="node" id="n-decision"><span class="ms"></span><b>Decide</b><span>language matches, text error ≤ limit</span></div>
-          <div class="node" id="n-log" style="grid-column: 1 / -1"><span class="ms"></span><b>Log the decision</b><span>Postgres <code>qc.checks</code> (own schema, not exposed): feeds the buyer report, the 10% batch rule and threshold tuning</span></div>
+    </section>
+
+    <section aria-labelledby="arch">
+      <h2 id="arch">What happens to your recording</h2>
+      <p class="lead muted" style="margin-top:10px;max-width:70ch">Cheap checks run on the phone, so a bad take is redone on the spot and never uploaded. The server checks again, since a phone can be tampered with, then listens for the words. Steps light up as your recording goes through.</p>
+      <div class="lanes">
+        <div class="lane">
+          <h3>On the phone</h3>
+          <div class="steps">
+            <div class="step" id="n-rec"><b>Record <span class="ms"></span></b><span class="d">16 kHz mono WAV</span></div>
+            <div class="step" id="n-phone"><b>Phone checks <span class="ms"></span></b><span class="d">length, silence, clipping, loudness, noise</span></div>
+            <div class="step" id="n-upload"><b>Upload <span class="ms"></span></b><span class="d">audio and the sentence shown</span></div>
+          </div>
+        </div>
+        <div class="lane srv">
+          <h3>On the server · Supabase function <code>qc-check</code></h3>
+          <div class="steps">
+            <div class="step" id="n-signal"><b>Check the sound again <span class="ms"></span></b><span class="d">same rules, never trust the phone</span></div>
+            <div class="step" id="n-storage"><b>Keep the recording <span class="ms"></span></b><span class="d">private storage, for buyer audits and disputes</span></div>
+            <div class="step" id="n-asr"><b>Listen for the words <span class="ms"></span></b><span class="d">Whisper: which language, which words</span></div>
+            <div class="step" id="n-decision"><b>Decide <span class="ms"></span></b><span class="d">right language, text error within the limit</span></div>
+            <div class="step wide" id="n-log"><b>Log the decision <span class="ms"></span></b><span class="d">Postgres <code>qc.checks</code>: the buyer report, the 10% batch rule and threshold tuning read from it</span></div>
+          </div>
         </div>
       </div>
-    </div>
-    <p class="flow">At scale the same function sits behind a queue; the few borderline recordings (target ≤5% of volume) go to human review instead of an automatic verdict, and accepted recordings are packed into buyer batches that must stay under the buyer's 10% rejection rule.</p>
-  </section>
+      <p class="scale">At scale the same function sits behind a queue. Borderline recordings, at most 5% of volume, go to a person instead of an automatic verdict. Accepted recordings are packed into buyer batches that must stay under the buyer's 10% rejection rule.</p>
+    </section>
 
-  <section class="card" aria-labelledby="feed">
-    <h2 id="feed">Latest checks on this server</h2>
-    <p class="lede">Read from the decision log. Audio and network data are not shown.</p>
-    <div class="scroll" style="margin-top:10px"><table class="feed" id="feedtbl"><tr><td class="note">Loading…</td></tr></table></div>
-  </section>
+    <section aria-labelledby="feed">
+      <h2 id="feed">Latest checks on this server</h2>
+      <p class="muted" style="margin-top:8px" id="stat-label">From the decision log. Audio and network data stay private.</p>
+      <div class="scroll"><table id="feedtbl"><tr><td class="muted">Loading…</td></tr></table></div>
+    </section>
 
-  <section class="card" aria-labelledby="limits">
-    <h2 id="limits">What this does not prove yet</h2>
-    <ul class="limits note">
-      <li>The measured numbers come from planted defects on real recordings, so labels are known. Real buyer decisions are the next test.</li>
-      <li>FLEURS is read in quiet rooms. Car noise, phone microphones and spontaneous speech will be harder.</li>
-      <li>This live server uses Whisper large-v3 (hosted) instead of Whisper small used in the measurement, and English and Russian reuse the Spanish text limit. Both are untested against the targets.</li>
-    </ul>
-    <p class="note" style="margin-top:10px">Code and measurement: <a id="codelink" href="#">repository</a>.</p>
-  </section>
-</div>
+    <section class="two" aria-labelledby="limits">
+      <div>
+        <h2 id="limits">What this does not prove yet</h2>
+        <ul class="limits">
+          <li>The 97% and 2% come from defects planted in real recordings, so the right answer is known. Real buyer decisions are the next test.</li>
+          <li>FLEURS is read in quiet rooms. A car, a cheap microphone and free speech will be harder.</li>
+          <li>This server runs Whisper large-v3 (hosted), not Whisper small from the test, and English and Russian borrow the Spanish text limit. Neither is measured against the targets.</li>
+        </ul>
+      </div>
+      <div>
+        <h2>Code and method</h2>
+        <p style="margin-top:14px;color:var(--ink-2)">The checks, this page, the server function and how the numbers were measured are in the <a id="codelink" href="https://github.com/lenar-amirov/test-task-speech">repository</a>.</p>
+      </div>
+    </section>
+
+    <footer>Prototype built for the DataTasks product case. Not an inDrive product. Recordings for the test set: Google FLEURS, CC BY 4.0.</footer>
+  </div>
+</main>
 
 <script src="qc.js"></script>
 <script src="config.js"></script>
@@ -169,6 +258,12 @@ const CFG = window.QC_CONFIG || {};
 const TH = { min_speech_ratio: 0.35, chars_per_s: 14.0, max_clip_ratio: 0.001, min_speech_dbfs: -42.0, min_snr_db: 10, max_edge_silence_s: 4.0, max_gap_s: 3.0 };
 if (CFG.codeUrl) document.getElementById('codelink').href = CFG.codeUrl;
 
+const ICON = {
+  mic: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>',
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  redo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 2.6-6.4M3 4v5h5"/></svg>',
+  x: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+};
 const PROMPTS = {
   en: ["Please call me back after six, I am driving to the airport now.",
        "The driver arrived on time and helped us with the heavy bags.",
@@ -181,20 +276,21 @@ const PROMPTS = {
 };
 const OTHER = { en: "My favourite season is autumn, because the city is quiet.", ru: "Мне больше всего нравится осень, потому что в городе тихо." };
 const SCENARIOS = [
-  { id: "correct", label: "Read it right", expect: "accept", how: { en: "Read the sentence normally, in a quiet place.", ru: "Read the sentence normally, in a quiet place." } },
-  { id: "wrong_text", label: "Read a different sentence", expect: "reject", how: { en: `Instead, read: “${OTHER.en}”`, ru: `Instead, read: «${OTHER.ru}»` } },
-  { id: "cut_off", label: "Stop halfway", expect: "reject", how: { en: "Read only the first few words, then stop.", ru: "Read only the first few words, then stop." } },
-  { id: "long_silence", label: "Pause in the middle", expect: "reject", how: { en: "Read half, stay silent for 5 seconds, then finish.", ru: "Read half, stay silent for 5 seconds, then finish." } },
-  { id: "wrong_language", label: "Use another language", expect: "reject", how: { en: "Say the sentence in Russian (or any other language).", ru: "Say the sentence in English (or any other language)." } },
-  { id: "too_quiet", label: "Whisper it", expect: "reject", how: { en: "Whisper the sentence from an arm's length away.", ru: "Whisper the sentence from an arm's length away." } },
+  { id: "correct", label: "Read it right", expect: "accept", how: () => "Read the sentence as written, somewhere quiet." },
+  { id: "wrong_text", label: "Different sentence", expect: "reject", how: l => `Read this instead: “${OTHER[l]}”` },
+  { id: "cut_off", label: "Stop halfway", expect: "reject", how: () => "Read the first few words, then stop." },
+  { id: "long_silence", label: "Long pause", expect: "reject", how: () => "Read half, stay silent for 5 seconds, then finish." },
+  { id: "wrong_language", label: "Other language", expect: "reject", how: l => l === 'en' ? "Say it in Russian, or any language but English." : "Say it in English, or any language but Russian." },
+  { id: "too_quiet", label: "Whisper", expect: "reject", how: () => "Whisper it from an arm's length away." },
 ];
-const REASONS = { "too short or cut off": "too short or cut off", clipping: "clipping (too loud)", "too quiet": "too quiet",
-  "too noisy": "too noisy", "long silence": "long silence", "wrong language": "wrong language", "does not match the prompt": "words do not match the sentence" };
+const REASONS = { "too short or cut off": "too short or cut off", clipping: "too loud, clipped", "too quiet": "too quiet",
+  "too noisy": "too noisy", "long silence": "long silence", "wrong language": "wrong language", "does not match the prompt": "words don't match the sentence" };
 
 let lang = "en", scen = "correct", pi = 0;
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const prompt = () => PROMPTS[lang][pi % PROMPTS[lang].length];
+const recIdle = () => `${ICON.mic}Record`;
 
 function renderPicker() {
   document.querySelectorAll('[data-lang]').forEach(b => b.setAttribute('aria-pressed', b.dataset.lang === lang));
@@ -202,11 +298,12 @@ function renderPicker() {
   $('prompt').textContent = prompt();
   $('prompt').lang = lang;
   const s = SCENARIOS.find(s => s.id === scen);
-  $('howto').innerHTML = `<b>${s.expect === 'accept' ? 'Expected: accept.' : 'Expected: re-record.'}</b> ${esc(s.how[lang])}`;
+  $('howto').innerHTML = `<strong>Should get: ${s.expect === 'accept' ? 'accept' : 're-record'}.</strong> ${esc(s.how(lang))}`;
 }
 document.querySelectorAll('[data-lang]').forEach(b => b.onclick = () => { lang = b.dataset.lang; renderPicker(); });
 $('scenarios').onclick = e => { const b = e.target.closest('[data-s]'); if (b) { scen = b.dataset.s; renderPicker(); } };
 $('another').onclick = () => { pi++; renderPicker(); };
+$('recbtn').innerHTML = recIdle();
 renderPicker();
 
 // ---------- architecture highlighting ----------
@@ -232,30 +329,34 @@ async function startRec() {
   try {
     stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
   } catch (e) {
-    $('micnote').textContent = 'No microphone access. Allow it in the browser, or upload a file instead.'; return;
+    $('micnote').textContent = 'No microphone access. Allow it in the browser, or upload a file.'; return;
   }
   chunks = []; rec = new MediaRecorder(stream);
   rec.ondataavailable = e => e.data.size && chunks.push(e.data);
-  rec.onstop = async () => { stream.getTracks().forEach(t => t.stop()); clearInterval(tick); $('timer').textContent = '';
-    $('recbtn').textContent = '● Record'; node('rec', 'done', Math.round(performance.now() - tStart));
+  rec.onstop = async () => { stream.getTracks().forEach(t => t.stop()); clearInterval(tick);
+    $('recbtn').classList.remove('recording'); $('recbtn').innerHTML = recIdle();
+    node('rec', 'done', Math.round(performance.now() - tStart));
     await handle(await new Blob(chunks, { type: rec.mimeType }).arrayBuffer()); };
   rec.start(); tStart = performance.now(); resetNodes(); node('rec', 'active');
-  $('recbtn').textContent = '■ Stop';
-  tick = setInterval(() => { const s = (performance.now() - tStart) / 1000; $('timer').textContent = s.toFixed(1) + ' s'; if (s >= 30) rec.state === 'recording' && rec.stop(); }, 100);
+  $('recbtn').classList.add('recording');
+  const show = s => { $('recbtn').innerHTML = `<span class="dot"></span>Stop · <span class="num">${s.toFixed(1)} s</span>`; };
+  show(0);
+  tick = setInterval(() => { const s = (performance.now() - tStart) / 1000; show(s); if (s >= 30) rec.state === 'recording' && rec.stop(); }, 100);
 }
 $('recbtn').onclick = () => (rec && rec.state === 'recording') ? rec.stop() : startRec();
 $('file').onchange = async e => { const f = e.target.files[0]; if (!f) return; resetNodes(); node('rec', 'done'); await handle(await f.arrayBuffer()); e.target.value = ''; };
 
 // ---------- check ----------
 function sigTable(sig) {
+  const need = TH.min_speech_ratio * Math.max(1, prompt().length / TH.chars_per_s);
   return `<div class="scroll"><table><tr><th>Measure</th><th>Value</th><th>Limit</th></tr>
-  <tr><td>Speech</td><td>${sig.speech_s.toFixed(1)} s</td><td>≥ ${(TH.min_speech_ratio * Math.max(1, prompt().length / TH.chars_per_s)).toFixed(1)} s</td></tr>
+  <tr><td>Speech</td><td>${sig.speech_s.toFixed(1)} s</td><td>≥ ${need.toFixed(1)} s</td></tr>
   <tr><td>Noise (SNR)</td><td>${sig.snr_db.toFixed(1)} dB</td><td>≥ ${TH.min_snr_db} dB</td></tr>
-  <tr><td>Loudness of speech</td><td>${sig.speech_dbfs.toFixed(1)} dBFS</td><td>≥ ${TH.min_speech_dbfs}</td></tr>
+  <tr><td>Loudness</td><td>${sig.speech_dbfs.toFixed(1)} dBFS</td><td>≥ ${TH.min_speech_dbfs}</td></tr>
   <tr><td>Clipped samples</td><td>${(sig.clip_ratio * 100).toFixed(2)}%</td><td>≤ ${(TH.max_clip_ratio * 100).toFixed(2)}%</td></tr>
-  <tr><td>Silence: start / end / longest pause</td><td>${sig.lead_silence_s.toFixed(1)} / ${sig.trail_silence_s.toFixed(1)} / ${sig.max_gap_s.toFixed(1)} s</td><td>≤ ${TH.max_edge_silence_s} / ${TH.max_edge_silence_s} / ${TH.max_gap_s} s</td></tr></table></div>`;
+  <tr><td>Silence: start / end / pause</td><td>${sig.lead_silence_s.toFixed(1)} / ${sig.trail_silence_s.toFixed(1)} / ${sig.max_gap_s.toFixed(1)} s</td><td>≤ ${TH.max_edge_silence_s} / ${TH.max_edge_silence_s} / ${TH.max_gap_s} s</td></tr></table></div>`;
 }
-const badge = ok => ok ? '<span class="verdict ok">Accept</span>' : '<span class="verdict bad">Re-record</span>';
+const badge = ok => ok ? `<span class="pill ok">${ICON.check}Accept</span>` : `<span class="pill bad">${ICON.redo}Re-record</span>`;
 const reasonText = rs => rs.map(r => REASONS[r] || r).join(', ');
 
 async function handle(buf) {
@@ -263,19 +364,18 @@ async function handle(buf) {
   let x;
   node('phone', 'active');
   const t = performance.now();
-  try { x = await decodeTo16k(buf); } catch { out.innerHTML = '<div class="eyebrow">3 · Verdict</div><p class="note">This audio could not be decoded. Try again, or upload a wav or mp3.</p>'; node('phone', 'fail'); return; }
+  try { x = await decodeTo16k(buf); } catch { out.innerHTML = '<div class="card"><h3>Verdict</h3><p class="empty" style="margin-top:8px">This audio could not be read. Record again, or upload a wav or mp3.</p></div>'; node('phone', 'fail'); return; }
   const sig = analyzeSignal(x), phone = checkSignal(sig, prompt(), TH);
   node('phone', phone.accept ? 'done' : 'fail', Math.round(performance.now() - t));
   const wav = wavFrom(x), url = URL.createObjectURL(wav);
   const s = SCENARIOS.find(s => s.id === scen);
-  out.innerHTML = `<div class="eyebrow">3 · Verdict <span class="tag">${esc(s.label)}</span></div>
-    <div class="panel"><div class="eyebrow">Phone checks · instant</div>
-      <p style="margin:6px 0">${badge(phone.accept)} ${phone.reasons.length ? '· ' + esc(reasonText(phone.reasons)) : ''}</p>
-      ${phone.accept ? '' : '<p class="note" style="margin:0 0 6px">In the app the contributor would re-record now, and nothing is uploaded. Here we send it anyway so you can see the server side.</p>'}
-      ${sigTable(sig)}</div>
-    <div class="panel server" id="srv"><div class="eyebrow">Server · speech recognition</div><p class="note" style="margin:6px 0 0">Sending…</p></div>
-    <audio controls src="${url}"></audio>`;
-  if (!CFG.supabaseUrl || !CFG.anonKey) { $('srv').innerHTML = '<div class="eyebrow">Server</div><p class="note">Server is not configured on this copy of the page; only the phone checks ran.</p>'; return; }
+  out.innerHTML = `<div class="card server" id="srv"><h3>Server verdict <small>${esc(s.label)}</small></h3><p class="muted" style="margin-top:8px">Listening…</p></div>
+    <div class="card"><h3>Phone checks <small>instant</small></h3>
+      <div class="vline">${badge(phone.accept)} <span>${esc(reasonText(phone.reasons))}</span></div>
+      ${phone.accept ? '' : '<p class="note-box">In the app the contributor re-records now and nothing is uploaded. Here it goes to the server anyway, so you can see that side.</p>'}
+      ${sigTable(sig)}
+      <audio controls src="${url}"></audio></div>`;
+  if (!CFG.supabaseUrl || !CFG.anonKey) { $('srv').innerHTML = '<h3>Server verdict</h3><p class="muted" style="margin-top:8px">No server on this copy of the page; only the phone checks ran.</p>'; return; }
 
   node('upload', 'active');
   const form = new FormData();
@@ -287,39 +387,43 @@ async function handle(buf) {
   try {
     r = await fetch(`${CFG.supabaseUrl}/functions/v1/qc-check`, { method: 'POST', headers: { Authorization: `Bearer ${CFG.anonKey}`, apikey: CFG.anonKey }, body: form });
     j = await r.json();
-  } catch (e) { j = { error: 'Server unreachable' }; }
+  } catch (e) { j = { error: 'The server did not answer' }; }
   const rtt = Math.round(performance.now() - t1);
   if (!r || !r.ok || j.error) {
     ['upload', 'signal', 'storage', 'asr', 'decision', 'log'].forEach(n => node(n, 'fail'));
-    $('srv').innerHTML = `<div class="eyebrow">Server</div><p class="note" style="margin:6px 0 0">${esc(j.error || 'Server error')}. The phone verdict above still stands.</p>`; return;
+    $('srv').innerHTML = `<h3>Server verdict</h3><p class="muted" style="margin-top:8px">${esc(j.error || 'Server error')}. The phone verdict below still stands; try again in a minute.</p>`; return;
   }
   const st = j.steps || {};
   node('upload', 'done', Math.max(0, rtt - (st.total || 0)));
   ['signal', 'storage', 'asr', 'decision', 'log'].forEach(n => node(n, 'done', st[n]));
   if (!j.accept) node('decision', 'fail', st.decision);
   const match = s.expect === (j.accept ? 'accept' : 'reject');
-  $('srv').innerHTML = `<div class="eyebrow">Server · final verdict</div>
-    <p style="margin:6px 0">${badge(j.accept)} ${j.reasons.length ? '· ' + esc(reasonText(j.reasons)) : ''}</p>
-    <p style="margin:0 0 6px">Heard as: <i lang="${lang}">${esc(j.transcript || '(nothing)')}</i></p>
-    <p class="note" style="margin:0">Language heard: ${esc(j.detected_lang || '?')} · text error vs. sentence ${j.cer == null ? '–' : Math.round(j.cer * 100) + '%'} (limit 25%) · usable speech we would pay for: <b>${(j.usable_s || 0).toFixed(1)} s</b> · ${rtt} ms round trip · check #${j.id}</p>
-    <p class="note" style="margin:6px 0 0">${match ? '✓ Matches what this case should get.' : '✗ Not what this case should get. Misses like this are what the measured error rates count.'}</p>`;
+  $('srv').innerHTML = `<h3>Server verdict <small>${esc(s.label)} · check #${j.id}</small></h3>
+    <div class="vline">${badge(j.accept)} <span>${esc(reasonText(j.reasons))}</span></div>
+    <p class="heard">Heard: <i lang="${lang}">${esc(j.transcript || '(nothing)')}</i></p>
+    <div class="facts">
+      <div><b class="num">${j.cer == null ? '–' : Math.round(j.cer * 100) + '%'}</b><span>text error, limit 25%</span></div>
+      <div><b class="num">${(j.usable_s || 0).toFixed(1)} s</b><span>speech we pay for</span></div>
+      <div><b class="num">${(rtt / 1000).toFixed(1)} s</b><span>round trip</span></div>
+    </div>
+    <p class="match">${match ? ICON.check + 'That is what this case should get.' : ICON.x + 'Not what this case should get. Misses like this are what the measured error rates count.'}</p>`;
   loadFeed();
 }
 
 // ---------- live feed (read through the edge function; the log table is not exposed) ----------
 async function loadFeed() {
-  if (!CFG.supabaseUrl || !CFG.anonKey) { $('feedtbl').innerHTML = '<tr><td class="note">Server not configured.</td></tr>'; return; }
+  if (!CFG.supabaseUrl || !CFG.anonKey) { $('feedtbl').innerHTML = '<tr><td class="muted">No server on this copy of the page.</td></tr>'; return; }
   try {
     const r = await fetch(`${CFG.supabaseUrl}/functions/v1/qc-check`, { headers: { apikey: CFG.anonKey, Authorization: `Bearer ${CFG.anonKey}` } });
     if (!r.ok) throw new Error(r.status);
     const { rows, stats } = await r.json();
     const s = stats || { total: 0, accepted: 0 };
-    $('stat-total').textContent = s.total; $('stat-label').textContent = `checks run on this server so far, ${s.accepted} accepted`;
-    $('feedtbl').innerHTML = '<tr><th>When</th><th>Lang</th><th>Case</th><th>Verdict</th><th>Heard as</th></tr>' + (rows.length ? rows.map(r =>
+    $('stat-label').textContent = `${s.total} checks so far, ${s.accepted} accepted. From the decision log; audio and network data stay private.`;
+    $('feedtbl').innerHTML = '<tr><th>When</th><th>Lang</th><th>Case</th><th>Verdict</th><th>Heard</th></tr>' + (rows.length ? rows.map(r =>
       `<tr><td>${new Date(r.created_at).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</td><td>${esc(r.lang)}</td><td>${esc((SCENARIOS.find(s => s.id === r.scenario) || {}).label || r.scenario || '')}</td>
-       <td>${r.accept ? '<span class="verdict ok">Accept</span>' : '<span class="verdict bad">Re-record</span>'}<div class="note">${esc(reasonText(r.reasons || []))}</div></td><td lang="${esc(r.lang)}">${esc(r.transcript || '')}</td></tr>`).join('')
-      : '<tr><td colspan="5" class="note">No checks yet. Be the first.</td></tr>');
-  } catch (e) { $('feedtbl').innerHTML = '<tr><td class="note">Could not load the log right now.</td></tr>'; }
+       <td>${badge(r.accept)}<div class="small muted" style="margin-top:4px">${esc(reasonText(r.reasons || []))}</div></td><td lang="${esc(r.lang)}">${esc(r.transcript || '')}</td></tr>`).join('')
+      : '<tr><td colspan="5" class="muted">No checks yet. Yours will be the first.</td></tr>');
+  } catch (e) { $('feedtbl').innerHTML = '<tr><td class="muted">The log is not reachable right now.</td></tr>'; }
 }
 loadFeed();
 </script>

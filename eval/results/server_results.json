@@ -297,5 +297,5 @@
       }
     ]
   },
-  "thresholds": "frozen (eval/results/results.json); server copy in app/supabase/functions/qc-check/qc.ts"
+  "thresholds": "signal limits frozen (eval/results/results.json), text limits re-tuned on the dev set and frozen (eval/results/text_limits.json); server copy in app/supabase/functions/qc-check/qc.ts"
 }

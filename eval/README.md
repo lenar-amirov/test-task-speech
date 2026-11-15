@@ -1,7 +1,7 @@
 # How the speech auto-QC was measured
 
-**The live server, measured on a fresh set the tuning never saw: 95% of bad recordings caught (143/150),
-4% of good ones wrongly rejected (6/150).** Targets were ≥90% and ≤5%. Thresholds were frozen before any of this ran.
+**The live server, measured on a fresh set kept out of all tuning: 95% of bad recordings caught (143/150),
+4% of good ones wrongly rejected (6/150).** Targets were ≥90% and ≤5%. Signal limits were frozen before any check ran; the text limits were re-tuned once for the deployed model on a separate dev set after a first run on these sets, then frozen. Both runs are published below.
 
 | Fresh set, 300 recordings | Caught (bad → re-record) | Wrongly rejected (good → re-record) |
 |---|---|---|

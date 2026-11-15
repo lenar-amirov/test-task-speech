@@ -104,7 +104,7 @@ def main(data, out_jsonl, summary):
                 print(f"{split} {i + 1}/{len(items)} {it['id']} {it['label']} -> {'accept' if v['accept'] else 'reject'} {v['reasons']}", flush=True)
                 time.sleep(max(0, PACE_S - (time.time() - t)))
     s = summarize(list(done.values()))
-    s["thresholds"] = "frozen (eval/results/results.json); server copy in app/supabase/functions/qc-check/qc.ts"
+    s["thresholds"] = "signal limits frozen (eval/results/results.json), text limits re-tuned on the dev set and frozen (eval/results/text_limits.json); server copy in app/supabase/functions/qc-check/qc.ts"
     json.dump(s, open(summary, "w"), indent=2, ensure_ascii=False)
     print(json.dumps({k: {kk: v[kk] for kk in ("n", "caught", "bad", "recall", "recall_ci95", "wrongly_rejected", "good",
                                                   "false_reject_rate", "false_reject_ci95")} for k, v in s.items() if isinstance(v, dict)}, indent=2))

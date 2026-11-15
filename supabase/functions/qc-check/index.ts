@@ -41,10 +41,18 @@ async function purgeOld(db: ReturnType<typeof createClient>) {
   const { data: days } = await db.storage.from("qc-recordings").list("", { limit: 100 });
   for (const d of days ?? []) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(d.name) || d.name >= cutoff) continue;
-    const { data: files } = await db.storage.from("qc-recordings").list(d.name, { limit: 1000 });
-    const paths = (files ?? []).map((f) => `${d.name}/${f.name}`);
-    if (paths.length) await db.storage.from("qc-recordings").remove(paths);
-    await sql`update qc.checks set audio_path = null where audio_path like ${d.name + "/%"}`;
+    // A listing returns at most 1000 files: keep removing until the day's folder is empty, and only then
+    // clear audio_path for that day, so no row loses the path of a file that is still stored.
+    let empty = false;
+    for (let i = 0; i < 20; i++) {
+      const { data: files, error } = await db.storage.from("qc-recordings").list(d.name, { limit: 1000 });
+      if (error) break;
+      const paths = (files ?? []).map((f) => `${d.name}/${f.name}`);
+      if (!paths.length) { empty = true; break; }
+      const { error: rmErr } = await db.storage.from("qc-recordings").remove(paths);
+      if (rmErr) break;
+    }
+    if (empty) await sql`update qc.checks set audio_path = null where audio_path like ${d.name + "/%"}`;
   }
 }
 

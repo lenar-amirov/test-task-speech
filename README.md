@@ -5,10 +5,10 @@ Live demo: **https://lenar-amirov.github.io/test-task-speech/**
 The check that decides whether a read-speech recording is good enough to pay for and ship to a buyer,
 before any human looks at it. Built for the inDrive DataTasks Staff PM home task (the Build question).
 
-**Measured result (the live server):** on 300 real recordings the tuning never saw, 95% of bad recordings caught
+**Measured result (the live server):** on 300 real recordings kept out of all tuning, 95% of bad recordings caught
 (143/150, 95% CI 91–98%) and 4% of good ones wrongly rejected (6/150, CI 1.9–8.5%). Targets were ≥90% and ≤5%;
-the false-reject upper bound is above 5%, so a larger test is next. Thresholds were frozen before any check ran
-(text limits tuned on a separate FLEURS dev-split set for the deployed Whisper large-v3). FLEURS Spanish, Kazakh and Urdu.
+the false-reject upper bound is above 5%, so a larger test is next. Signal limits were frozen before any check ran. Text limits were re-tuned once
+for the deployed Whisper large-v3 on a separate FLEURS dev-split set, after a first run on these sets, then frozen; both runs are published. Measured languages: Spanish, Kazakh and Urdu.
 Cutting 20–30% of a recording (about a third of the words) is caught 92% of the time. Weak spot: Kazakh, 4 of 49 good recordings rejected.
 Details: [`eval/README.md`](eval/README.md).
 
@@ -17,7 +17,7 @@ GitHub Pages and Actions; Supabase (edge functions, Postgres, storage); Groq run
 
 ## Try it
 
-Open the live demo, pick English or Russian and a case (read it right, read a different sentence, stop halfway,
+Open the live demo, pick a language (Spanish, Kazakh and Urdu are the measured ones) and a case (read it right, read a different sentence, stop halfway,
 pause, another language, whisper), record, and get the verdict from the phone checks and then from the server.
 English and Russian are for trying it yourself; they reuse the Spanish text limit and are not part of the measured numbers.
 

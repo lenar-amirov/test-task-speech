@@ -9,8 +9,11 @@ before any human looks at it. Built for the inDrive DataTasks Staff PM home task
 (143/150, 95% CI 91–98%) and 4% of good ones wrongly rejected (6/150, CI 1.9–8.5%). Targets were ≥90% and ≤5%;
 the false-reject upper bound is above 5%, so a larger test is next. Thresholds were frozen before any check ran
 (text limits tuned on a separate FLEURS dev-split set for the deployed Whisper large-v3). FLEURS Spanish, Kazakh and Urdu.
-Skipping a quarter of the sentence is caught 92% of the time. Weak spot: Kazakh, 4 of 49 good recordings rejected.
+Cutting 20–30% of a recording (about a third of the words) is caught 92% of the time. Weak spot: Kazakh, 4 of 49 good recordings rejected.
 Details: [`eval/README.md`](eval/README.md).
+
+**Built with:** Claude (Anthropic) as my coding partner for the page, the server code and the measurement;
+GitHub Pages and Actions; Supabase (edge functions, Postgres, storage); Groq running OpenAI's Whisper large-v3.
 
 ## Try it
 

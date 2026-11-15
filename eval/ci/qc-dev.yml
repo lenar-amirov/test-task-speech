@@ -1,0 +1,39 @@
+# Runs the tuning (dev) set through the deployed pipeline; the rows are used to set the text limits.
+# Runs on GitHub's runners because they can reach Supabase. Resumable: rerun to finish a partial run.
+name: qc-dev
+on:
+  workflow_dispatch:
+  push:
+    branches: [claude/project-thread-liknow]
+    paths: [indrive-datatasks/eval/run_dev_eval.trigger]
+permissions:
+  contents: write
+concurrency: qc-eval
+jobs:
+  measure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install soundfile numpy requests
+      - name: Wait until the published allowlist includes the dev set
+        run: |
+          for i in $(seq 1 40); do
+            n=$(curl -s https://lenar-amirov.github.io/test-task-speech/evalset/hashes.json | python -c "import json,sys;print(len(json.load(sys.stdin)))" || echo 0)
+            [ "$n" -ge 846 ] && echo "allowlist: $n" && exit 0; sleep 15
+          done; exit 1
+      - name: Run eval against qc-eval
+        env:
+          SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNwc2RpaGl3ZGJhY2N4b293emh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAyNzU3NzIsImV4cCI6MjA3NTg1MTc3Mn0.fvTo_k9H_4CT_WIFbr5mHnGckFDdtstlK7zou2GMPg0
+        working-directory: indrive-datatasks/eval
+        run: SPLITS=dev python server_eval.py data results/dev_rows.jsonl results/dev_results.json
+      - name: Commit results (also on partial runs)
+        if: always()
+        run: |
+          git config user.name "qc-eval bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add indrive-datatasks/eval/results/dev_rows.jsonl indrive-datatasks/eval/results/dev_results.json || true
+          git commit -m "qc-dev: tuning-set rows" || exit 0
+          git pull --rebase origin ${GITHUB_REF_NAME} && git push origin HEAD:${GITHUB_REF_NAME}

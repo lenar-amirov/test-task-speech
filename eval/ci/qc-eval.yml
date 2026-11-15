@@ -1,0 +1,33 @@
+# Measures the deployed speech QC pipeline on the labelled eval sets and commits the results.
+# Runs on GitHub's runners because they can reach Supabase. Resumable: rerun to finish a partial run.
+name: qc-eval
+on:
+  workflow_dispatch:
+  push:
+    branches: [claude/project-thread-liknow]
+    paths: [indrive-datatasks/eval/run_server_eval.trigger]
+permissions:
+  contents: write
+concurrency: qc-eval
+jobs:
+  measure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install soundfile numpy requests
+      - name: Run eval against qc-eval
+        env:
+          SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNwc2RpaGl3ZGJhY2N4b293emh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAyNzU3NzIsImV4cCI6MjA3NTg1MTc3Mn0.fvTo_k9H_4CT_WIFbr5mHnGckFDdtstlK7zou2GMPg0
+        working-directory: indrive-datatasks/eval
+        run: python server_eval.py data results/server_rows.jsonl results/server_results.json
+      - name: Commit results (also on partial runs)
+        if: always()
+        run: |
+          git config user.name "qc-eval bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add indrive-datatasks/eval/results/server_rows.jsonl indrive-datatasks/eval/results/server_results.json || true
+          git commit -m "qc-eval: deployed-pipeline results" || exit 0
+          git pull --rebase origin ${GITHUB_REF_NAME} && git push origin HEAD:${GITHUB_REF_NAME}

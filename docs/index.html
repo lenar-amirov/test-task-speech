@@ -56,6 +56,7 @@
   .cost td:last-child, .cost th:last-child { text-align: right; white-space: nowrap; }
   .cost tr.total td { font-weight: 800; border-bottom: 0; }
   .cost p { margin-top: 10px; color: var(--ink-2); }
+  .cost p + h3 { margin-top: 26px; }
   .freecheck { margin-top: 12px; font-size: 15px; color: var(--ink-2); max-width: 52ch; }
   .fine { margin-top: 12px; font-size: 13.5px; color: var(--muted); }
 
@@ -301,7 +302,7 @@
             <label class="upload">Upload a file instead<input type="file" id="file" accept="audio/*" hidden></label>
             <span class="small muted" id="paynote"></span>
           </div>
-          <p class="small muted consent">By recording or uploading you agree that the audio is stored for this demo and deleted after 30 days. Don't say names, numbers or anything personal.</p>
+          <p class="small muted consent">By recording or uploading you agree that the audio is stored for this demo, transcribed by Groq, and deleted after 30 days. Don't say names, numbers or anything personal.</p>
           <div class="samplebar">
             <p><b>No microphone?</b> Check one of our recordings instead: real speakers the system never heard while it was tuned.</p>
             <div class="chips" id="samples" role="group" aria-label="Sample recordings"></div>
@@ -356,7 +357,9 @@
           <tr><td>People listening to borderline recordings (5%)</td><td class="num">$2,750</td><td class="num">$0.55</td></tr>
           <tr class="total"><td>Total</td><td class="num">≈ $3,500</td><td class="num">≈ $0.70</td></tr>
         </table></div>
-        <p>Listening to everything by hand would cost about $55,000 a month, or $11 per hour, so the check is about 15 times cheaper. It takes about 1.5% of the ~$45 a buyer pays per hour. List prices, November 2026.</p>
+        <p>Listening to everything by hand would cost about $55,000 a month, or $11 per hour, so the check is about 15 times cheaper. It takes about 1.5% of the ~$45 a buyer pays per hour. A native speaker re-listening to 1% of accepted recordings at random, so the buyer gets a measured bad rate per batch, adds about $500 a month ($0.10 per hour). List prices, November 2026.</p>
+        <h3>Why this piece first</h3>
+        <p>Scale lives or dies on quality control: every bad hour that reaches a buyer risks a rejected batch, and every hour checked by hand eats the margin. Spot-checking 5–10% by hand is cheap but lets most bad recordings into the batch and tells the contributor nothing for a day. This check answers in seconds, so the contributor re-records on the spot, and people only listen to borderline cases and the random audit.</p>
       </div>
     </section>
 
@@ -365,10 +368,11 @@
         <h2 id="limits">What this does not prove yet</h2>
         <ul class="limits">
           <li>The 95% and 4% come from defects planted in real recordings, so the right answer is known. Real buyer decisions are the next test.</li>
-          <li>Subtle cheating: skipping a quarter of the sentence is caught 55 times in 60 (92%), and a person listening to borderline cases raises that to 59. Reading a Kazakh sentence in Russian (40 of 40) and light clipping (60 of 60) were all caught.</li>
+          <li>Subtle cheating: cutting 20–30% of the recording (about a third of the words) is caught 55 times in 60 (92%), and a person listening to borderline cases raises that to 59. Skipping one to three words was not measured and probably passes. Reading a Kazakh sentence in Russian (40 of 40) and light clipping (60 of 60) were all caught.</li>
           <li>Kazakh is the weak language: 4 of 49 good Kazakh recordings were rejected (8%), two of them for a pause at the end just over the 4-second limit. Trimming trailing silence before the check is the next fix.</li>
           <li>FLEURS is read in quiet rooms. A car, a cheap microphone and free speech will be harder. The free conversation task here runs on demo rules that have not been measured yet.</li>
-          <li>Fraud: the same file sent twice is caught. Replaying someone else's recording, text-to-speech and two accounts sharing one voice are not caught yet; they need speaker and synthetic-voice checks.</li>
+          <li>Fraud: the same file sent twice is caught. Replaying someone else's recording, text-to-speech and two accounts sharing one voice are not caught yet; they need speaker and synthetic-voice checks. In this demo the page sends the sentence it showed; in the app the server would look it up by task id, so it cannot be swapped.</li>
+          <li>Fairness: if 2% of submissions are bad, about two out of three rejections land on honest contributors. The app needs a one-tap "this is a mistake" that sends the recording to a person, and contributors whose disputes keep winning get their recordings re-checked.</li>
         </ul>
       </div>
       <div>
@@ -472,7 +476,7 @@ function renderPicker() {
   $('stagehead').textContent = free ? 'Talk and record' : 'Read this aloud and record';
   $('another').hidden = free; $('freecheck').hidden = !free;
   $('micnote').textContent = `Your browser asks for the microphone. Stops by itself after ${free ? FREE.max_s : 30} s.`;
-  $('paynote').innerHTML = free ? 'In the app this would be a longer, better-paid task: unscripted speech sells for more.' : 'In the app this is a 10-second task paid <span class="num">75 ₸</span>.';
+  $('paynote').innerHTML = free ? 'In the app this would be a longer, better-paid task: unscripted speech sells for more.' : 'In the app this is a 10-second task paid <span class="num">75 ₸</span>. That is about $55 per accepted hour, more than a buyer pays, so the plan is to pay per minute of usable audio.';
   $('scenarios').innerHTML = scenList().map(s => `<button type="button" class="chip" data-s="${s.id}" aria-pressed="${!sample && s.id === scen}">${esc(s.label)}</button>`).join('');
   $('prompt').textContent = prompt();
   $('prompt').lang = lang; $('prompt').dir = lang === 'ur' ? 'rtl' : 'ltr';

@@ -38,15 +38,17 @@ large-v3 good readings sit much lower, so the text limits were re-tuned once: `d
 the FLEURS dev split (no recording shared with the fresh or hard sets, 30 per language with skipped words), they run
 through `qc-eval` (`results/dev_rows.jsonl`), and `tune_text.py` picks per language the lowest limit that wrongly rejects
 at most 2% of good dev recordings for their text: Spanish 0.15, Kazakh 0.25, Urdu 0.25 (`results/text_limits.json`).
-Frozen, then the fresh and hard sets were run once. Now skipped words are caught 55/60 (Spanish 20/20, Kazakh 18/20,
+Frozen, then the fresh and hard sets were run once. Now skipped words (20–30% of the audio cut, about a third of the words) are caught 55/60 (Spanish 20/20, Kazakh 18/20,
 Urdu 17/20); with a person on borderline cases, 59/60. The price is 3 more good recordings rejected on the fresh set
-(6/150 instead of 3/150). The old run is kept: `results/server_rows_whisper_small_limits.jsonl`.
-A word-level alignment check (flag any run of missing words longer than ~15% of the sentence) would catch skips
+(6/150 instead of 3/150: the new limits added four text rejections, and one old rejection, kk_056, went away because
+hosted Whisper does not return exactly the same transcript every run; 5 of 460 transcripts differed between the two runs). The old run is kept: `results/server_rows_whisper_small_limits.jsonl`.
+The skips here come from the same generator the limits were tuned on, and skipping one to three words was not
+measured. A word-level alignment check (flag any run of missing words longer than ~15% of the sentence) would catch skips
 without tightening the whole-sentence limit; that is the next step.
 
 How the live server was measured: `server_eval.py` sends every recording to the `qc-eval` edge function, which runs
 the same code as the live `qc-check` (shared `qc.ts` and `asr.ts`) but stores nothing and accepts only the eval
-recordings (by PCM hash). Run by GitHub Actions (`.github/workflows/qc-eval.yml`, about 30 minutes, about 1.5 hours of audio,
+recordings (by PCM hash). Run by GitHub Actions in my working repository (workflow copied here: `ci/qc-eval.yml`, `ci/qc-dev.yml`; about 30 minutes, about 1.5 hours of audio,
 about $0.20 of Groq time). Every verdict with its transcript: `results/server_rows.jsonl`; totals and errors: `results/server_results.json`.
 
 ## Steps

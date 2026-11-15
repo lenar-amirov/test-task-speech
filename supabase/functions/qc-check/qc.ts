@@ -133,14 +133,69 @@ export function sameLanguage(expected: string, detected: string): boolean {
   return (LANG_NAMES[expected] ?? [expected]).includes((detected || "").toLowerCase());
 }
 
+// Whisper's language label is unreliable on a few seconds of audio (English heard as "Russian", Spanish as "Portuguese").
+// So the label alone never rejects: the transcript's own alphabet has to agree with it.
+const SCRIPT: Record<string, string> = { en: "latin", es: "latin", ru: "cyrillic", kk: "cyrillic", ur: "arabic" };
+const KAZAKH_LETTERS = /[әғқңөұүһі]/i;
+
+export function scriptOf(text: string): string | null {
+  const n = { latin: 0, cyrillic: 0, arabic: 0, devanagari: 0 };
+  for (const ch of text) {
+    if (/\p{Script=Latin}/u.test(ch)) n.latin++;
+    else if (/\p{Script=Cyrillic}/u.test(ch)) n.cyrillic++;
+    else if (/\p{Script=Arabic}/u.test(ch)) n.arabic++;
+    else if (/\p{Script=Devanagari}/u.test(ch)) n.devanagari++;
+  }
+  const [best, count] = Object.entries(n).sort((a, b) => b[1] - a[1])[0];
+  return count >= 3 ? best : null;
+}
+
+function labelCode(detected: string): string | null {
+  const d = (detected || "").toLowerCase();
+  for (const [code, names] of Object.entries(LANG_NAMES)) if (names.includes(d)) return code;
+  return null;
+}
+
+/** True only when the words themselves show another language, not when Whisper's label merely disagrees. */
+export function wrongLanguage(expected: string, asr: { language: string; text: string }): boolean {
+  const script = scriptOf(asr.text);
+  if (!script) return false; // too little text to judge; the length and text checks will speak
+  const want = SCRIPT[expected];
+  if (expected === "ur" ? !["arabic", "devanagari"].includes(script) : script !== want) return true;
+  if (expected === "kk" && KAZAKH_LETTERS.test(asr.text)) return false;
+  const label = labelCode(asr.language);
+  if (!label || sameLanguage(expected, asr.language)) return false;
+  if (expected === "ru" && label === "kk") return KAZAKH_LETTERS.test(asr.text);
+  return SCRIPT[label] === script; // e.g. Spanish words for an English task: same alphabet, label agrees with the words
+}
+
 export function verdict(sig: Signal, prompt: string, lang: string, asr: { language: string; text: string } | null, th: Thresholds = TH) {
   const reasons = signalReasons(sig, prompt, th);
   let c: number | null = null;
   if (asr) {
     c = cer(prompt, asr.text);
-    if (!sameLanguage(lang, asr.language)) reasons.push("wrong language");
-    else if (c > (th.max_cer[lang] ?? 0.25)) reasons.push("does not match the prompt");
+    if (c > (th.max_cer[lang] ?? 0.25)) reasons.push(wrongLanguage(lang, asr) ? "wrong language" : "does not match the prompt");
   }
   const accept = reasons.length === 0;
   return { accept, reasons, usable_s: accept ? sig.speech_s : 0, cer: c };
+}
+
+// Free conversation: no text to compare with. Demo rules, not measured against the targets.
+export const FREE = { min_speech_s: 10, max_gap_s: 5, min_words: 12 };
+
+export function freeVerdict(sig: Signal, lang: string, asr: { language: string; text: string } | null, th: Thresholds = TH) {
+  const reasons: string[] = [];
+  if (sig.speech_s < FREE.min_speech_s) reasons.push("too little speech");
+  if (sig.clip_ratio > th.max_clip_ratio) reasons.push("clipping");
+  if (sig.speech_dbfs < th.min_speech_dbfs) reasons.push("too quiet");
+  if (sig.snr_db < th.min_snr_db) reasons.push("too noisy");
+  if (sig.lead_silence_s > th.max_edge_silence_s || sig.trail_silence_s > th.max_edge_silence_s || sig.max_gap_s > FREE.max_gap_s) reasons.push("long silence");
+  let words = 0;
+  if (asr) {
+    words = normalize(asr.text).split(" ").filter(Boolean).length;
+    if (wrongLanguage(lang, asr)) reasons.push("wrong language");
+    else if (words < FREE.min_words) reasons.push("too few words");
+  }
+  const accept = reasons.length === 0;
+  return { accept, reasons, usable_s: accept ? sig.speech_s : 0, cer: null, words };
 }

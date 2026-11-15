@@ -47,6 +47,13 @@
   .hero { padding-top: 44px; max-width: 900px; }
   .hero p.lead { font-size: 19px; color: var(--ink-2); margin-top: 18px; max-width: 58ch; }
   .hero p.lead b { color: var(--ink); font-weight: 700; background: linear-gradient(transparent 62%, var(--lime) 62%); }
+  .hero p.result-line { margin-top: 14px; color: var(--ink); }
+  .langs + .langs { margin-top: 6px; }
+  .cost { margin-top: 28px; max-width: 760px; }
+  .cost table { margin-top: 10px; }
+  .cost td:last-child, .cost th:last-child { text-align: right; white-space: nowrap; }
+  .cost tr.total td { font-weight: 800; border-bottom: 0; }
+  .cost p { margin-top: 10px; color: var(--ink-2); }
   .fine { margin-top: 12px; font-size: 13.5px; color: var(--muted); }
 
   /* the recorder */
@@ -173,8 +180,9 @@
   <div class="wrap">
     <section class="hero" aria-labelledby="h1">
       <h1 id="h1">Is this recording good enough to pay for?</h1>
-      <p class="lead">Drivers and passengers read a sentence into their phone for a few tenge. Before we pay and ship it to a buyer, this check answers: accept, or re-record with a reason. On 300 recordings it had never seen, it caught <b>145 of 150 bad ones (97%)</b> and wrongly rejected <b>3 of 150 good ones (2%)</b>.</p>
-      <p class="fine">Targets were ≥90% and ≤5%. Thresholds were frozen before that test. Recordings: FLEURS Spanish, Kazakh, Urdu.</p>
+      <p class="lead">Drivers and passengers read a sentence into their phone for a few tenge. Before we pay and ship it to a buyer, this check answers: accept, or re-record with a reason.</p>
+      <p class="lead result-line">On 300 recordings it had never seen, it caught <b>145 of 150 bad ones (97%)</b> and wrongly rejected <b>3 of 150 good ones (2%)</b>.</p>
+      <p class="fine">Targets were ≥90% and ≤5%. Recordings: FLEURS Spanish, Kazakh, Urdu.</p>
     </section>
 
     <section class="try" aria-labelledby="try">
@@ -182,7 +190,14 @@
       <div class="studio">
         <div class="setup">
           <div class="field">
-            <span class="label" id="l-lang"><i>1</i>Language of the task</span>
+            <span class="label" id="l-task"><i>1</i>Type of task</span>
+            <div class="langs" role="group" aria-labelledby="l-task">
+              <button type="button" data-task="read" aria-pressed="true">Read a sentence</button>
+              <button type="button" data-task="free" aria-pressed="false">Free conversation</button>
+            </div>
+          </div>
+          <div class="field">
+            <span class="label" id="l-lang"><i>2</i>Language</span>
             <div class="langs" role="group" aria-labelledby="l-lang">
               <button type="button" data-lang="en" aria-pressed="true" lang="en">English</button>
               <button type="button" data-lang="ru" aria-pressed="false" lang="ru">Русский</button>
@@ -193,25 +208,25 @@
             <p class="langnote" id="langnote"></p>
           </div>
           <div class="field">
-            <span class="label" id="l-scen"><i>2</i>What to try</span>
+            <span class="label" id="l-scen"><i>3</i>What to try</span>
             <div class="chips" id="scenarios" role="group" aria-labelledby="l-scen"></div>
             <p class="howto" id="howto"></p>
           </div>
         </div>
         <div class="stage">
-          <span class="label"><i>3</i>Read this aloud and record</span>
+          <span class="label"><i>4</i><span id="stagehead">Read this aloud and record</span></span>
           <p class="prompt" id="prompt"></p>
-          <button type="button" class="linkbtn" id="another"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.6-6.4M21 4v5h-5"/></svg>Another sentence</button>
+          <button type="button" class="linkbtn" id="another"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.6-6.4M21 4v5h-5"/></svg><span id="anotherlabel">Another sentence</span></button>
           <div class="rec-row">
             <button type="button" class="recbtn" id="recbtn" aria-describedby="reclabel"></button>
             <div>
               <p class="reclabel" id="reclabel" aria-live="polite">Record</p>
-              <p class="small muted" id="micnote">Your browser asks for the microphone. Stops by itself after 30 s.</p>
+              <p class="small muted" id="micnote"></p>
             </div>
           </div>
           <div class="sub">
             <label class="upload">Upload a file instead<input type="file" id="file" accept="audio/*" hidden></label>
-            <span class="small muted">In the app this is a 10-second task paid <span class="num">75 ₸</span>.</span>
+            <span class="small muted" id="paynote"></span>
           </div>
         </div>
       </div>
@@ -227,7 +242,7 @@
           <div class="steps">
             <div class="step" id="n-rec"><b>Record <span class="ms"></span></b><span class="d">16 kHz mono WAV</span></div>
             <div class="step" id="n-phone"><b>Phone checks <span class="ms"></span></b><span class="d">length, silence, clipping, loudness, noise</span></div>
-            <div class="step" id="n-upload"><b>Upload <span class="ms"></span></b><span class="d">audio and the sentence shown</span></div>
+            <div class="step" id="n-upload"><b>Upload <span class="ms"></span></b><span class="d">audio and the task shown</span></div>
           </div>
         </div>
         <div class="lane srv">
@@ -236,12 +251,24 @@
             <div class="step" id="n-signal"><b>Check the sound again <span class="ms"></span></b><span class="d">same rules, never trust the phone</span></div>
             <div class="step" id="n-storage"><b>Keep the recording <span class="ms"></span></b><span class="d">private storage, for buyer audits and disputes</span></div>
             <div class="step" id="n-asr"><b>Listen for the words <span class="ms"></span></b><span class="d">Whisper: which language, which words</span></div>
-            <div class="step" id="n-decision"><b>Decide <span class="ms"></span></b><span class="d">right language, text error within the limit</span></div>
+            <div class="step" id="n-decision"><b>Decide <span class="ms"></span></b><span class="d">right language; words match the sentence, or enough was said</span></div>
             <div class="step wide" id="n-log"><b>Log the decision <span class="ms"></span></b><span class="d">Postgres <code>qc.checks</code>: the buyer report, the 10% batch rule and threshold tuning read from it</span></div>
           </div>
         </div>
       </div>
       <p class="scale">At scale the same function sits behind a queue. Borderline recordings, at most 5% of volume, go to a person instead of an automatic verdict. Accepted recordings are packed into buyer batches that must stay under the buyer's 10% rejection rule.</p>
+      <div class="cost">
+        <h3>What the check costs</h3>
+        <p>At the month-12 plan of about 5,000 accepted hours of speech a month (about 1.65 million recordings):</p>
+        <div class="scroll"><table>
+          <tr><th>Item</th><th>Per month</th><th>Per accepted hour</th></tr>
+          <tr><td>Speech recognition (Whisper large-v3, hosted)</td><td class="num">$610</td><td class="num">$0.12</td></tr>
+          <tr><td>Server, database, storage and delivery (Supabase)</td><td class="num">$140</td><td class="num">$0.03</td></tr>
+          <tr><td>People listening to borderline recordings (5%)</td><td class="num">$2,750</td><td class="num">$0.55</td></tr>
+          <tr class="total"><td>Total</td><td class="num">≈ $3,500</td><td class="num">≈ $0.70</td></tr>
+        </table></div>
+        <p>Listening to everything by hand would cost about $55,000 a month, or $11 per hour, so the check is about 15 times cheaper. It takes about 1.5% of the ~$45 a buyer pays per hour. List prices, November 2026.</p>
+      </div>
     </section>
 
     <section aria-labelledby="feed">
@@ -255,8 +282,7 @@
         <h2 id="limits">What this does not prove yet</h2>
         <ul class="limits">
           <li>The 97% and 2% come from defects planted in real recordings, so the right answer is known. Real buyer decisions are the next test.</li>
-          <li>FLEURS is read in quiet rooms. A car, a cheap microphone and free speech will be harder.</li>
-          <li>This server runs Whisper large-v3 (hosted), not Whisper small from the test, and English and Russian borrow the Spanish text limit. Neither is measured against the targets.</li>
+          <li>FLEURS is read in quiet rooms. A car, a cheap microphone and free speech will be harder. The free conversation task here runs on demo rules that have not been measured yet.</li>
         </ul>
       </div>
       <div>
@@ -319,25 +345,51 @@ const SCENARIOS = [
   { id: "wrong_language", label: "Other language", expect: "reject", how: l => `Say it in ${l === 'en' ? 'Russian' : 'English'}, or any language but ${LANG_LABEL[l]}.` },
   { id: "too_quiet", label: "Whisper", expect: "reject", how: () => "Whisper it from an arm's length away." },
 ];
+// Free conversation: a topic instead of a sentence. Demo rules, not measured against the targets.
+const FREE = { min_speech_s: 10, max_gap_s: 5, min_words: 12, max_s: 60 };
+const TOPICS = {
+  en: ["Your last taxi ride: where you went and what happened on the way.", "The best place to eat in your city, and how to get there.", "A trip you remember well."],
+  ru: ["Ваша последняя поездка на такси: куда ехали и что было по дороге.", "Лучшее место, где поесть в вашем городе, и как туда добраться.", "Поездка, которую вы хорошо помните."],
+  es: ["Tu último viaje en taxi: adónde fuiste y qué pasó en el camino.", "El mejor lugar para comer en tu ciudad y cómo llegar.", "Un viaje que recuerdas bien."],
+  kk: ["Соңғы такси сапарыңыз: қайда бардыңыз, жолда не болды.", "Қалаңыздағы ең жақсы тамақтанатын орын және оған қалай жетуге болады.", "Жақсы есіңізде қалған сапар."],
+  ur: ["آپ کی پچھلی ٹیکسی کی سواری: آپ کہاں گئے اور راستے میں کیا ہوا۔", "آپ کے شہر میں کھانے کی بہترین جگہ، اور وہاں کیسے پہنچیں۔", "ایک سفر جو آپ کو اچھی طرح یاد ہے۔"],
+};
+const FREE_SCENARIOS = [
+  { id: "free_ok", label: "Talk naturally", expect: "accept", how: () => "Talk about the topic for 20–40 seconds, alone or with someone next to you." },
+  { id: "free_short", label: "One phrase", expect: "reject", how: () => "Say one short sentence and stop." },
+  { id: "free_silence", label: "Long pause", expect: "reject", how: () => "Say a few words, stay silent for 7 seconds, then go on." },
+  { id: "free_lang", label: "Other language", expect: "reject", how: l => `Talk in ${l === 'en' ? 'Russian' : 'English'}, or any language but ${LANG_LABEL[l]}.` },
+  { id: "free_quiet", label: "Whisper", expect: "reject", how: () => "Whisper from an arm's length away." },
+];
 const REASONS = { "too short or cut off": "too short or cut off", clipping: "too loud, clipped", "too quiet": "too quiet",
-  "too noisy": "too noisy", "long silence": "long silence", "wrong language": "wrong language", "does not match the prompt": "words don't match the sentence" };
+  "too noisy": "too noisy", "long silence": "long silence", "wrong language": "wrong language", "does not match the prompt": "words don't match the sentence",
+  "too little speech": "too little speech", "too few words": "too few words" };
 
-let lang = "en", scen = "correct", pi = 0;
+let lang = "en", task = "read", scen = "correct", pi = 0;
+const scenList = () => task === 'free' ? FREE_SCENARIOS : SCENARIOS;
+const findScen = id => SCENARIOS.concat(FREE_SCENARIOS).find(s => s.id === id);
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-const prompt = () => PROMPTS[lang][pi % PROMPTS[lang].length];
+const prompt = () => { const list = task === 'free' ? TOPICS[lang] : PROMPTS[lang]; return list[pi % list.length]; };
 const recIdle = () => { $('recbtn').innerHTML = ICON.mic; $('recbtn').setAttribute('aria-label', 'Start recording'); $('reclabel').textContent = 'Tap to record'; };
 
 function renderPicker() {
   document.querySelectorAll('[data-lang]').forEach(b => b.setAttribute('aria-pressed', b.dataset.lang === lang));
-  $('scenarios').innerHTML = SCENARIOS.map(s => `<button type="button" class="chip" data-s="${s.id}" aria-pressed="${s.id === scen}">${esc(s.label)}</button>`).join('');
+  document.querySelectorAll('[data-task]').forEach(b => b.setAttribute('aria-pressed', b.dataset.task === task));
+  const free = task === 'free';
+  $('stagehead').textContent = free ? 'Talk about this and record' : 'Read this aloud and record';
+  $('anotherlabel').textContent = free ? 'Another topic' : 'Another sentence';
+  $('micnote').textContent = `Your browser asks for the microphone. Stops by itself after ${free ? FREE.max_s : 30} s.`;
+  $('paynote').innerHTML = free ? 'In the app this would be a longer, better-paid task: unscripted speech sells for more.' : 'In the app this is a 10-second task paid <span class="num">75 ₸</span>.';
+  $('scenarios').innerHTML = scenList().map(s => `<button type="button" class="chip" data-s="${s.id}" aria-pressed="${s.id === scen}">${esc(s.label)}</button>`).join('');
   $('prompt').textContent = prompt();
   $('prompt').lang = lang; $('prompt').dir = lang === 'ur' ? 'rtl' : 'ltr';
-  $('langnote').textContent = MEASURED[lang] ? `${LANG_LABEL[lang]} is one of the three languages the 97% and 2% were measured on.` : `${LANG_LABEL[lang]} is here so you can try it; it was not part of the measured test.`;
-  const s = SCENARIOS.find(s => s.id === scen);
+  $('langnote').textContent = free ? 'Free conversation runs on demo rules: at least 10 s of speech and 12 words in the right language. Not measured yet.' : MEASURED[lang] ? `${LANG_LABEL[lang]} is one of the three languages the 97% and 2% were measured on.` : `${LANG_LABEL[lang]} is here so you can try it; it was not part of the measured test.`;
+  const s = findScen(scen);
   $('howto').innerHTML = `<strong>Should get: ${s.expect === 'accept' ? 'accept' : 're-record'}.</strong> ${s.html ? s.how(lang) : esc(s.how(lang))}`;
 }
 document.querySelectorAll('[data-lang]').forEach(b => b.onclick = () => { lang = b.dataset.lang; renderPicker(); });
+document.querySelectorAll('[data-task]').forEach(b => b.onclick = () => { if (task === b.dataset.task) return; task = b.dataset.task; scen = scenList()[0].id; pi = 0; renderPicker(); });
 $('scenarios').onclick = e => { const b = e.target.closest('[data-s]'); if (b) { scen = b.dataset.s; renderPicker(); } };
 $('another').onclick = () => { pi++; renderPicker(); };
 recIdle();
@@ -379,20 +431,31 @@ async function startRec() {
   $('recbtn').innerHTML = '<span class="sq"></span>'; $('recbtn').setAttribute('aria-label', 'Stop recording');
   const show = s => { $('reclabel').innerHTML = `Recording <span class="num">${s.toFixed(1)} s</span> · tap to stop`; };
   show(0);
-  tick = setInterval(() => { const s = (performance.now() - tStart) / 1000; show(s); if (s >= 30) rec.state === 'recording' && rec.stop(); }, 100);
+  tick = setInterval(() => { const s = (performance.now() - tStart) / 1000; show(s); if (s >= (task === 'free' ? FREE.max_s : 30)) rec.state === 'recording' && rec.stop(); }, 100);
 }
 $('recbtn').onclick = () => (rec && rec.state === 'recording') ? rec.stop() : startRec();
 $('file').onchange = async e => { const f = e.target.files[0]; if (!f) return; resetNodes(); node('rec', 'done'); await handle(await f.arrayBuffer()); e.target.value = ''; };
 
 // ---------- check ----------
+function checkFree(sig) {
+  const reasons = [];
+  if (sig.speech_s < FREE.min_speech_s) reasons.push('too little speech');
+  if (sig.clip_ratio > TH.max_clip_ratio) reasons.push('clipping');
+  if (sig.speech_dbfs < TH.min_speech_dbfs) reasons.push('too quiet');
+  if (sig.snr_db < TH.min_snr_db) reasons.push('too noisy');
+  if (sig.lead_silence_s > TH.max_edge_silence_s || sig.trail_silence_s > TH.max_edge_silence_s || sig.max_gap_s > FREE.max_gap_s) reasons.push('long silence');
+  return { accept: !reasons.length, reasons, usable_s: reasons.length ? 0 : sig.speech_s };
+}
 function sigTable(sig) {
-  const need = TH.min_speech_ratio * Math.max(1, prompt().length / TH.chars_per_s);
+  const free = task === 'free';
+  const need = free ? FREE.min_speech_s : TH.min_speech_ratio * Math.max(1, prompt().length / TH.chars_per_s);
+  const gap = free ? FREE.max_gap_s : TH.max_gap_s;
   return `<div class="scroll"><table><tr><th>Measure</th><th>Value</th><th>Limit</th></tr>
   <tr><td>Speech</td><td>${sig.speech_s.toFixed(1)} s</td><td>≥ ${need.toFixed(1)} s</td></tr>
   <tr><td>Noise (SNR)</td><td>${sig.snr_db.toFixed(1)} dB</td><td>≥ ${TH.min_snr_db} dB</td></tr>
   <tr><td>Loudness</td><td>${sig.speech_dbfs.toFixed(1)} dBFS</td><td>≥ ${TH.min_speech_dbfs}</td></tr>
   <tr><td>Clipped samples</td><td>${(sig.clip_ratio * 100).toFixed(2)}%</td><td>≤ ${(TH.max_clip_ratio * 100).toFixed(2)}%</td></tr>
-  <tr><td>Silence: start / end / pause</td><td>${sig.lead_silence_s.toFixed(1)} / ${sig.trail_silence_s.toFixed(1)} / ${sig.max_gap_s.toFixed(1)} s</td><td>≤ ${TH.max_edge_silence_s} / ${TH.max_edge_silence_s} / ${TH.max_gap_s} s</td></tr></table></div>`;
+  <tr><td>Silence: start / end / pause</td><td>${sig.lead_silence_s.toFixed(1)} / ${sig.trail_silence_s.toFixed(1)} / ${sig.max_gap_s.toFixed(1)} s</td><td>≤ ${TH.max_edge_silence_s} / ${TH.max_edge_silence_s} / ${gap} s</td></tr></table></div>`;
 }
 const badge = ok => ok ? `<span class="pill ok">${ICON.check}Accept</span>` : `<span class="pill bad">${ICON.redo}Re-record</span>`;
 const reasonText = rs => rs.map(r => REASONS[r] || r).join(', ');
@@ -403,10 +466,10 @@ async function handle(buf) {
   node('phone', 'active');
   const t = performance.now();
   try { x = await decodeTo16k(buf); } catch { out.innerHTML = '<div class="card"><h3>Verdict</h3><p class="empty" style="margin-top:8px">This audio could not be read. Record again, or upload a wav or mp3.</p></div>'; node('phone', 'fail'); return; }
-  const sig = analyzeSignal(x), phone = checkSignal(sig, prompt(), TH);
+  const sig = analyzeSignal(x), phone = task === 'free' ? checkFree(sig) : checkSignal(sig, prompt(), TH);
   node('phone', phone.accept ? 'done' : 'fail', Math.round(performance.now() - t));
   const wav = wavFrom(x), url = URL.createObjectURL(wav);
-  const s = SCENARIOS.find(s => s.id === scen);
+  const s = findScen(scen), taskNow = task, langNow = lang;
   const showOut = () => { const r = out.getBoundingClientRect(); if (r.top > innerHeight * 0.6 || r.bottom < 0) out.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }); };
   out.innerHTML = `<div class="card server" id="srv"><h3>Server verdict <small>${esc(s.label)}</small></h3><p class="muted" style="margin-top:8px">Listening…</p></div>
     <div class="card"><h3>Phone checks <small>instant</small></h3>
@@ -419,7 +482,7 @@ async function handle(buf) {
 
   node('upload', 'active');
   const form = new FormData();
-  form.append('audio', wav, 'rec.wav'); form.append('lang', lang); form.append('prompt', prompt()); form.append('scenario', scen);
+  form.append('audio', wav, 'rec.wav'); form.append('lang', lang); form.append('prompt', prompt()); form.append('scenario', scen); form.append('task', task);
   form.append('phone', JSON.stringify({ accept: phone.accept, reasons: phone.reasons }));
   const t1 = performance.now();
   ['signal', 'storage', 'asr', 'decision', 'log'].forEach(n => node(n, 'active'));
@@ -440,9 +503,9 @@ async function handle(buf) {
   const match = s.expect === (j.accept ? 'accept' : 'reject');
   $('srv').innerHTML = `<h3>Server verdict <small>${esc(s.label)} · check #${j.id}</small></h3>
     <div class="vline">${badge(j.accept)} <span>${esc(reasonText(j.reasons))}</span></div>
-    <p class="heard">Heard: <i lang="${lang}" dir="auto">${esc(j.transcript || '(nothing)')}</i></p>
+    <p class="heard">Heard: <i lang="${langNow}" dir="auto">${esc(j.transcript || '(nothing)')}</i></p>
     <div class="facts">
-      <div><b class="num">${j.cer == null ? '–' : Math.round(j.cer * 100) + '%'}</b><span>text error, limit ${Math.round(CER_LIMIT[lang] * 100)}%</span></div>
+      ${taskNow === 'free' ? `<div><b class="num">${j.words ?? '–'}</b><span>words heard, need ${FREE.min_words}</span></div>` : `<div><b class="num">${j.cer == null ? '–' : Math.round(j.cer * 100) + '%'}</b><span>text error, limit ${Math.round(CER_LIMIT[langNow] * 100)}%</span></div>`}
       <div><b class="num">${(j.usable_s || 0).toFixed(1)} s</b><span>speech we pay for</span></div>
       <div><b class="num">${(rtt / 1000).toFixed(1)} s</b><span>round trip</span></div>
     </div>
@@ -460,7 +523,7 @@ async function loadFeed() {
     const s = stats || { total: 0, accepted: 0 };
     $('stat-label').textContent = `${s.total} checks so far, ${s.accepted} accepted. From the decision log; audio and network data stay private.`;
     $('feedtbl').innerHTML = '<tr><th>When</th><th>Lang</th><th>Case</th><th>Verdict</th><th>Heard</th></tr>' + (rows.length ? rows.map(r =>
-      `<tr><td>${new Date(r.created_at).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</td><td>${esc(r.lang)}</td><td>${esc((SCENARIOS.find(s => s.id === r.scenario) || {}).label || r.scenario || '')}</td>
+      `<tr><td>${new Date(r.created_at).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</td><td>${esc(r.lang)}</td><td>${esc((findScen(r.scenario) || {}).label || r.scenario || '')}</td>
        <td>${badge(r.accept)}<div class="small muted" style="margin-top:4px">${esc(reasonText(r.reasons || []))}</div></td><td lang="${esc(r.lang)}" dir="auto">${esc(r.transcript || '')}</td></tr>`).join('')
       : '<tr><td colspan="5" class="muted">No checks yet. Yours will be the first.</td></tr>');
   } catch (e) { $('feedtbl').innerHTML = '<tr><td class="muted">The log is not reachable right now.</td></tr>'; }

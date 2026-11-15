@@ -3,11 +3,11 @@
 // store the recording, run Whisper for language + transcript, compare with the prompt, log the decision, return the verdict.
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
 import postgres from "npm:postgres@3.4.4";
-import { analyzeSignal, decodeWav, TH, verdict } from "./qc.ts";
+import { analyzeSignal, decodeWav, freeVerdict, TH, verdict } from "./qc.ts";
 
 const LANGS = new Set(["en", "ru", "es", "kk", "ur"]);
-const MAX_BYTES = 2_000_000; // ~60 s of 16 kHz 16-bit mono
-const MAX_SECONDS = 45;
+const MAX_BYTES = 2_200_000; // ~65 s of 16 kHz 16-bit mono
+const MAX_SECONDS = 65;
 const PER_IP_PER_HOUR = 40;
 const ASR_MODEL = Deno.env.get("ASR_MODEL") ?? "whisper-large-v3";
 
@@ -68,6 +68,7 @@ Deno.serve(async (req) => {
     const lang = String(form.get("lang") ?? "");
     const prompt = String(form.get("prompt") ?? "").slice(0, 400);
     const scenario = String(form.get("scenario") ?? "").slice(0, 40);
+    const task = String(form.get("task") ?? "read") === "free" ? "free" : "read";
     let phone: unknown = null;
     try { phone = JSON.parse(String(form.get("phone") ?? "null")); } catch { phone = null; }
     if (!(file instanceof File)) return json({ error: "audio missing" }, 400);
@@ -103,7 +104,7 @@ Deno.serve(async (req) => {
     t = lap("asr", t);
 
     // 4) decision
-    const v = verdict(sig, prompt, lang, asr, TH);
+    const v = task === "free" ? freeVerdict(sig, lang, asr, TH) : { ...verdict(sig, prompt, lang, asr, TH), words: null };
     t = lap("decision", t);
 
     // 5) log every decision: this table is what the buyer report and threshold tuning are built from
@@ -117,7 +118,7 @@ Deno.serve(async (req) => {
     steps.total = Math.round(performance.now() - t0);
 
     return json({ id: ins.id, created_at: ins.created_at, accept: v.accept, reasons: v.reasons, usable_s: v.usable_s,
-      cer: v.cer, transcript: asr.text, detected_lang: asr.language, signal: sig, asr_model: ASR_MODEL, steps });
+      cer: v.cer, words: v.words, task, transcript: asr.text, detected_lang: asr.language, signal: sig, asr_model: ASR_MODEL, steps });
   } catch (e) {
     console.error(e);
     return json({ error: String((e as Error).message ?? e) }, 500);

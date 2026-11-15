@@ -83,7 +83,10 @@ Deno.serve(async (req) => {
     t = lap("signal", t);
 
     // 1b) the same recording sent again (resubmitted for double pay, or shared between accounts)
-    if (!SAMPLE_HASHES.has(hash.slice(0, 16))) {
+    // Demo samples are meant to be clicked again and again: the page marks them (scenario "sample_..."), and browsers
+    // re-encode them slightly differently, so the hash list alone is not enough.
+    const isSample = scenario.startsWith("sample_") || SAMPLE_HASHES.has(hash.slice(0, 16));
+    if (!isSample) {
       const [dup] = await sql`select id from qc.checks where signal->>'sha256' = ${hash} limit 1`;
       if (dup) {
         const reasons = ["duplicate recording"];

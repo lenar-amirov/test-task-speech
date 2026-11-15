@@ -38,9 +38,12 @@
 
   .top { max-width: 1240px; margin: 0 auto; padding: 14px max(20px, env(safe-area-inset-right)) 18px max(20px, env(safe-area-inset-left)); display: flex; align-items: center; justify-content: space-between; gap: 12px; }
   .brand { font-weight: 700; font-size: 14px; }
-  .langs { display: inline-flex; background: var(--sheet); border-radius: var(--r-pill); padding: 4px; gap: 2px; }
-  .langs button { font: 700 14px var(--font); border: 0; background: transparent; color: var(--ink); padding: 8px 14px; border-radius: var(--r-pill); cursor: pointer; min-height: 40px; }
+  .langs { display: flex; flex-wrap: wrap; background: var(--sheet); border-radius: 18px; padding: 4px; gap: 2px; margin-top: 18px; }
+  .langs button { flex: 1 1 auto; font: 700 14px var(--font); border: 0; background: transparent; color: var(--ink); padding: 8px 12px; border-radius: 14px; cursor: pointer; min-height: 44px; transition: background .15s; }
+  .langs button:hover { background: var(--tile); }
   .langs button[aria-pressed="true"] { background: var(--ink); color: #fff; }
+  .langnote { margin-top: 8px; font-size: 13px; color: var(--ink-2); }
+  .prompt:dir(rtl), .prompt[dir="rtl"] { font-size: 24px; line-height: 1.7; }
 
   .sheet { background: var(--sheet); border-radius: var(--r-sheet) var(--r-sheet) 0 0; min-height: 100vh; }
   .wrap { max-width: 1240px; margin: 0 auto; padding: 0 max(20px, env(safe-area-inset-right)) 0 max(20px, env(safe-area-inset-left)); }
@@ -160,10 +163,6 @@
 <body>
 <header class="top">
   <span class="brand">DataTasks speech check</span>
-  <div class="langs" role="group" aria-label="Recording language">
-    <button type="button" data-lang="en" aria-pressed="true">EN</button>
-    <button type="button" data-lang="ru" aria-pressed="false">RU</button>
-  </div>
 </header>
 
 <main class="sheet">
@@ -192,6 +191,14 @@
             <div><h3>Read the text aloud</h3><p class="small muted">About 10 seconds</p></div>
             <span class="pay num">75 ₸</span>
           </div>
+          <div class="langs" role="group" aria-label="Language of the task">
+            <button type="button" data-lang="en" aria-pressed="true" lang="en">English</button>
+            <button type="button" data-lang="ru" aria-pressed="false" lang="ru">Русский</button>
+            <button type="button" data-lang="es" aria-pressed="false" lang="es">Español</button>
+            <button type="button" data-lang="kk" aria-pressed="false" lang="kk">Қазақша</button>
+            <button type="button" data-lang="ur" aria-pressed="false" lang="ur">اردو</button>
+          </div>
+          <p class="langnote" id="langnote"></p>
           <div class="chips" id="scenarios" role="group" aria-label="What to try"></div>
           <div class="prompt-box">
             <p class="small muted">The app asks you to read</p>
@@ -285,14 +292,31 @@ const PROMPTS = {
        "Водитель приехал вовремя и помог нам с тяжёлыми сумками.",
        "На следующем перекрёстке поверните налево и остановитесь у аптеки.",
        "Вечером в дождь мы обычно заказываем такси."],
+  es: ["Por favor, llámame después de las seis, ahora voy al aeropuerto.",
+       "El conductor llegó a tiempo y nos ayudó con las maletas pesadas.",
+       "En la próxima esquina gire a la izquierda y pare junto a la farmacia.",
+       "Cuando llueve por la tarde, normalmente pedimos un taxi."],
+  kk: ["Маған алтыдан кейін қоңырау шалыңызшы, мен қазір әуежайға бара жатырмын.",
+       "Жүргізуші уақытында келіп, ауыр сөмкелерімізді көтеруге көмектесті.",
+       "Келесі қиылыстан солға бұрылып, дәріхананың жанына тоқтаңыз.",
+       "Кешке жаңбыр жауғанда біз әдетте такси шақырамыз."],
+  ur: ["براہ کرم چھ بجے کے بعد مجھے فون کریں، میں ابھی ایئرپورٹ جا رہا ہوں۔",
+       "ڈرائیور وقت پر پہنچا اور بھاری بیگ اٹھانے میں ہماری مدد کی۔",
+       "اگلے موڑ سے بائیں مڑیں اور دوا خانے کے پاس رک جائیں۔",
+       "شام کو بارش ہو تو ہم عام طور پر ٹیکسی منگواتے ہیں۔"],
 };
-const OTHER = { en: "My favourite season is autumn, because the city is quiet.", ru: "Мне больше всего нравится осень, потому что в городе тихо." };
+const MEASURED = { es: true, kk: true, ur: true };
+const CER_LIMIT = { en: 0.25, ru: 0.25, es: 0.25, kk: 0.55, ur: 0.35 };
+const LANG_LABEL = { en: 'English', ru: 'Russian', es: 'Spanish', kk: 'Kazakh', ur: 'Urdu' };
+const OTHER = { en: "My favourite season is autumn, because the city is quiet.", ru: "Мне больше всего нравится осень, потому что в городе тихо.",
+  es: "Mi estación favorita es el otoño, porque la ciudad está tranquila.", kk: "Маған күз мезгілі ұнайды, өйткені қала тыныш болады.",
+  ur: "مجھے خزاں کا موسم پسند ہے کیونکہ شہر پرسکون ہوتا ہے۔" };
 const SCENARIOS = [
   { id: "correct", label: "Read it right", expect: "accept", how: () => "Read the sentence as written, somewhere quiet." },
-  { id: "wrong_text", label: "Different sentence", expect: "reject", how: l => `Read this instead: “${OTHER[l]}”` },
+  { id: "wrong_text", label: "Different sentence", expect: "reject", how: l => `Read this instead: “<bdi lang="${l}">${OTHER[l]}</bdi>”`, html: true },
   { id: "cut_off", label: "Stop halfway", expect: "reject", how: () => "Read the first few words, then stop." },
   { id: "long_silence", label: "Long pause", expect: "reject", how: () => "Read half, stay silent for 5 seconds, then finish." },
-  { id: "wrong_language", label: "Other language", expect: "reject", how: l => l === 'en' ? "Say it in Russian, or any language but English." : "Say it in English, or any language but Russian." },
+  { id: "wrong_language", label: "Other language", expect: "reject", how: l => `Say it in ${l === 'en' ? 'Russian' : 'English'}, or any language but ${LANG_LABEL[l]}.` },
   { id: "too_quiet", label: "Whisper", expect: "reject", how: () => "Whisper it from an arm's length away." },
 ];
 const REASONS = { "too short or cut off": "too short or cut off", clipping: "too loud, clipped", "too quiet": "too quiet",
@@ -308,9 +332,10 @@ function renderPicker() {
   document.querySelectorAll('[data-lang]').forEach(b => b.setAttribute('aria-pressed', b.dataset.lang === lang));
   $('scenarios').innerHTML = SCENARIOS.map(s => `<button type="button" class="chip" data-s="${s.id}" aria-pressed="${s.id === scen}">${esc(s.label)}</button>`).join('');
   $('prompt').textContent = prompt();
-  $('prompt').lang = lang;
+  $('prompt').lang = lang; $('prompt').dir = lang === 'ur' ? 'rtl' : 'ltr';
+  $('langnote').textContent = MEASURED[lang] ? `${LANG_LABEL[lang]} is one of the three languages the 97% and 2% were measured on.` : `${LANG_LABEL[lang]} is here so you can try it; it was not part of the measured test.`;
   const s = SCENARIOS.find(s => s.id === scen);
-  $('howto').innerHTML = `<strong>Should get: ${s.expect === 'accept' ? 'accept' : 're-record'}.</strong> ${esc(s.how(lang))}`;
+  $('howto').innerHTML = `<strong>Should get: ${s.expect === 'accept' ? 'accept' : 're-record'}.</strong> ${s.html ? s.how(lang) : esc(s.how(lang))}`;
 }
 document.querySelectorAll('[data-lang]').forEach(b => b.onclick = () => { lang = b.dataset.lang; renderPicker(); });
 $('scenarios').onclick = e => { const b = e.target.closest('[data-s]'); if (b) { scen = b.dataset.s; renderPicker(); } };
@@ -414,9 +439,9 @@ async function handle(buf) {
   const match = s.expect === (j.accept ? 'accept' : 'reject');
   $('srv').innerHTML = `<h3>Server verdict <small>${esc(s.label)} · check #${j.id}</small></h3>
     <div class="vline">${badge(j.accept)} <span>${esc(reasonText(j.reasons))}</span></div>
-    <p class="heard">Heard: <i lang="${lang}">${esc(j.transcript || '(nothing)')}</i></p>
+    <p class="heard">Heard: <i lang="${lang}" dir="auto">${esc(j.transcript || '(nothing)')}</i></p>
     <div class="facts">
-      <div><b class="num">${j.cer == null ? '–' : Math.round(j.cer * 100) + '%'}</b><span>text error, limit 25%</span></div>
+      <div><b class="num">${j.cer == null ? '–' : Math.round(j.cer * 100) + '%'}</b><span>text error, limit ${Math.round(CER_LIMIT[lang] * 100)}%</span></div>
       <div><b class="num">${(j.usable_s || 0).toFixed(1)} s</b><span>speech we pay for</span></div>
       <div><b class="num">${(rtt / 1000).toFixed(1)} s</b><span>round trip</span></div>
     </div>
@@ -435,7 +460,7 @@ async function loadFeed() {
     $('stat-label').textContent = `${s.total} checks so far, ${s.accepted} accepted. From the decision log; audio and network data stay private.`;
     $('feedtbl').innerHTML = '<tr><th>When</th><th>Lang</th><th>Case</th><th>Verdict</th><th>Heard</th></tr>' + (rows.length ? rows.map(r =>
       `<tr><td>${new Date(r.created_at).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</td><td>${esc(r.lang)}</td><td>${esc((SCENARIOS.find(s => s.id === r.scenario) || {}).label || r.scenario || '')}</td>
-       <td>${badge(r.accept)}<div class="small muted" style="margin-top:4px">${esc(reasonText(r.reasons || []))}</div></td><td lang="${esc(r.lang)}">${esc(r.transcript || '')}</td></tr>`).join('')
+       <td>${badge(r.accept)}<div class="small muted" style="margin-top:4px">${esc(reasonText(r.reasons || []))}</div></td><td lang="${esc(r.lang)}" dir="auto">${esc(r.transcript || '')}</td></tr>`).join('')
       : '<tr><td colspan="5" class="muted">No checks yet. Yours will be the first.</td></tr>');
   } catch (e) { $('feedtbl').innerHTML = '<tr><td class="muted">The log is not reachable right now.</td></tr>'; }
 }

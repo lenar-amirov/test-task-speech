@@ -35,7 +35,7 @@ async function feed() {
   return { rows, stats };
 }
 
-async function transcribe(wav: Uint8Array) {
+async function transcribe(wav: Uint8Array, language?: string) {
   const key = Deno.env.get("GROQ_API_KEY");
   if (!key) throw new Error("GROQ_API_KEY is not set");
   const form = new FormData();
@@ -43,6 +43,7 @@ async function transcribe(wav: Uint8Array) {
   form.append("model", ASR_MODEL);
   form.append("response_format", "verbose_json");
   form.append("temperature", "0");
+  if (language) form.append("language", language);
   const r = await fetch("https://api.groq.com/openai/v1/audio/transcriptions", {
     method: "POST", headers: { Authorization: `Bearer ${key}` }, body: form,
   });
@@ -96,7 +97,9 @@ Deno.serve(async (req) => {
     t = lap("storage", t);
 
     // 3) speech recognition: which language, which words
-    const asr = await transcribe(wav);
+    let asr = await transcribe(wav);
+    // Whisper often labels spoken Urdu as Hindi and writes it in Devanagari. Same spoken language, so ask again for Urdu script.
+    if (lang === "ur" && ["hi", "hindi"].includes(asr.language.toLowerCase())) asr = { ...(await transcribe(wav, "ur")), language: asr.language };
     t = lap("asr", t);
 
     // 4) decision

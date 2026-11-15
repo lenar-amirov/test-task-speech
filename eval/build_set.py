@@ -4,7 +4,8 @@ Each real recording gets one variant: either kept acceptable (clean, mild backgr
 or given one defect a buyer would reject (wrong sentence, heavy noise, clipping, cut off, wrong language,
 long silence, too quiet). All sources are first brought to one level (-26 dBFS). The label is known because we planted the defect.
 
-Usage: python build_set.py FLEURS_DIR OUT_DIR [N_PER_LANG] [SEED]
+Usage: python build_set.py FLEURS_DIR OUT_DIR [N_PER_LANG] [SEED] [SPLIT]
+Build set: dev split, seed 7. Fresh set: test split, seed 11.
 """
 import csv, hashlib, os, random, sys
 import numpy as np
@@ -58,14 +59,20 @@ def babble(pool, rng, n=4):
     return b / rms(b) + 0.5 * pink / rms(pink)
 
 
-def main(src, out, n_per_lang=100, seed=7):
+def audio_dir(src, folder, split):
+    """FLEURS tarballs keep audio in <lang>/audio/<split>/; some mirrors use <lang>/<split>/."""
+    a = os.path.join(src, folder, "audio", split)
+    return a if os.path.isdir(a) else os.path.join(src, folder, split)
+
+
+def main(src, out, n_per_lang=100, seed=7, split="dev"):
     rng = np.random.default_rng(seed)
     rnd = random.Random(seed)
     data = {}
     for folder, code in LANGS.items():
-        rows = read_tsv(os.path.join(src, folder, "dev.tsv"))
+        rows = read_tsv(os.path.join(src, folder, f"{split}.tsv"))
         for r in rows:
-            r["path"] = os.path.join(src, folder, "dev", r["file"])
+            r["path"] = os.path.join(audio_dir(src, folder, split), r["file"])
         data[code] = [r for r in rows if os.path.exists(r["path"])]
     names = [v[0] for v in VARIANTS]
     weights = [v[2] for v in VARIANTS]
@@ -120,4 +127,5 @@ def main(src, out, n_per_lang=100, seed=7):
 
 
 if __name__ == "__main__":
-    main(sys.argv[1], sys.argv[2], int(sys.argv[3]) if len(sys.argv) > 3 else 100, int(sys.argv[4]) if len(sys.argv) > 4 else 7)
+    main(sys.argv[1], sys.argv[2], int(sys.argv[3]) if len(sys.argv) > 3 else 100, int(sys.argv[4]) if len(sys.argv) > 4 else 7,
+         sys.argv[5] if len(sys.argv) > 5 else "dev")

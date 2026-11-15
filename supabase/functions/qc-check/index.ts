@@ -1,15 +1,19 @@
 // qc-check: the server half of speech auto-QC.
 // Phone uploads a 16 kHz WAV + the prompt it showed. We re-run the signal checks (never trust the phone),
 // store the recording, run Whisper for language + transcript, compare with the prompt, log the decision, return the verdict.
+// Also: the same recording uploaded twice is rejected, and stored recordings are deleted after 30 days.
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
 import postgres from "npm:postgres@3.4.4";
-import { analyzeSignal, decodeWav, freeVerdict, TH, verdict } from "./qc.ts";
+import { analyzeSignal, decodeWav, freeVerdict, pcmSha256, TH, verdict } from "./qc.ts";
+import { ASR_MODEL, transcribe } from "./asr.ts";
 
 const LANGS = new Set(["en", "ru", "es", "kk", "ur"]);
 const MAX_BYTES = 2_200_000; // ~65 s of 16 kHz 16-bit mono
 const MAX_SECONDS = 65;
 const PER_IP_PER_HOUR = 40;
-const ASR_MODEL = Deno.env.get("ASR_MODEL") ?? "whisper-large-v3";
+const KEEP_DAYS = 30; // demo retention: recordings older than this are deleted
+// The demo's own sample files (hashed as the page uploads them) may be checked again and again; any other repeat is a duplicate.
+const SAMPLE_HASHES = new Set(["46ccb5f2e535b7e9", "5311bbd285e98cc5", "c93b536cd95b56ae", "8f63e873fa611970", "ca0e949e7c4eb32d", "36c88b20861517e6", "33910e4ae8294633", "8da880df678c08db", "5e9e8b84047a90c4", "a2df6b6da2eff967"]);
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -27,21 +31,17 @@ async function sha256(s: string) {
 // The decision log lives in schema `qc`, which is not exposed through the public API; only this function reaches it.
 const sql = postgres(Deno.env.get("SUPABASE_DB_URL")!, { max: 2, prepare: false });
 
-async function transcribe(wav: Uint8Array, language?: string) {
-  const key = Deno.env.get("GROQ_API_KEY");
-  if (!key) throw new Error("GROQ_API_KEY is not set");
-  const form = new FormData();
-  form.append("file", new Blob([wav], { type: "audio/wav" }), "rec.wav");
-  form.append("model", ASR_MODEL);
-  form.append("response_format", "verbose_json");
-  form.append("temperature", "0");
-  if (language) form.append("language", language);
-  const r = await fetch("https://api.groq.com/openai/v1/audio/transcriptions", {
-    method: "POST", headers: { Authorization: `Bearer ${key}` }, body: form,
-  });
-  if (!r.ok) throw new Error(`ASR ${r.status}: ${(await r.text()).slice(0, 200)}`);
-  const j = await r.json();
-  return { text: String(j.text ?? "").trim(), language: String(j.language ?? "") };
+/** Delete stored recordings from days older than KEEP_DAYS. Folders are named by date, so this is a cheap listing. */
+async function purgeOld(db: ReturnType<typeof createClient>) {
+  const cutoff = new Date(Date.now() - KEEP_DAYS * 86400_000).toISOString().slice(0, 10);
+  const { data: days } = await db.storage.from("qc-recordings").list("", { limit: 100 });
+  for (const d of days ?? []) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(d.name) || d.name >= cutoff) continue;
+    const { data: files } = await db.storage.from("qc-recordings").list(d.name, { limit: 1000 });
+    const paths = (files ?? []).map((f) => `${d.name}/${f.name}`);
+    if (paths.length) await db.storage.from("qc-recordings").remove(paths);
+    await sql`update qc.checks set audio_path = null where audio_path like ${d.name + "/%"}`;
+  }
 }
 
 Deno.serve(async (req) => {
@@ -79,7 +79,21 @@ Deno.serve(async (req) => {
     const x = decodeWav(wav);
     if (x.length / 16000 > MAX_SECONDS) return json({ error: "recording too long" }, 413);
     const sig = analyzeSignal(x);
+    const hash = await pcmSha256(wav);
     t = lap("signal", t);
+
+    // 1b) the same recording sent again (resubmitted for double pay, or shared between accounts)
+    if (!SAMPLE_HASHES.has(hash.slice(0, 16))) {
+      const [dup] = await sql`select id from qc.checks where signal->>'sha256' = ${hash} limit 1`;
+      if (dup) {
+        const reasons = ["duplicate recording"];
+        const [ins] = await sql`insert into qc.checks ${sql({ lang, scenario, prompt, signal: sql.json({ ...sig, sha256: hash, duplicate_of: dup.id }),
+          phone: sql.json(phone as never), accept: false, reasons, usable_s: 0, ip_hash: ipHash } as Record<string, unknown>)} returning id, created_at`;
+        steps.total = Math.round(performance.now() - t0);
+        return json({ id: ins.id, created_at: ins.created_at, accept: false, reasons, usable_s: 0, cer: null, words: null, task,
+          transcript: "", detected_lang: "", signal: sig, asr_model: null, borderline: false, steps });
+      }
+    }
 
     // 2) keep the recording (buyers audit samples; disputes need the original)
     const path = `${new Date().toISOString().slice(0, 10)}/${crypto.randomUUID()}.wav`;
@@ -88,9 +102,7 @@ Deno.serve(async (req) => {
     t = lap("storage", t);
 
     // 3) speech recognition: which language, which words
-    let asr = await transcribe(wav);
-    // Whisper often labels spoken Urdu as Hindi and writes it in Devanagari. Same spoken language, so ask again for Urdu script.
-    if (lang === "ur" && ["hi", "hindi"].includes(asr.language.toLowerCase())) asr = { ...(await transcribe(wav, "ur")), language: asr.language };
+    const asr = await transcribe(wav, lang);
     t = lap("asr", t);
 
     // 4) decision
@@ -100,15 +112,18 @@ Deno.serve(async (req) => {
     // 5) log every decision: this table is what the buyer report and threshold tuning are built from
     const row = {
       lang, scenario, prompt, transcript: asr.text, detected_lang: asr.language, cer: v.cer,
-      signal: sql.json(sig), phone: sql.json(phone as never), accept: v.accept, reasons: v.reasons, usable_s: v.usable_s,
+      signal: sql.json({ ...sig, sha256: hash, borderline: v.borderline }), phone: sql.json(phone as never), accept: v.accept, reasons: v.reasons, usable_s: v.usable_s,
       asr_model: ASR_MODEL, audio_path: path, ip_hash: ipHash,
     };
     const [ins] = await sql`insert into qc.checks ${sql(row as Record<string, unknown>)} returning id, created_at`;
     lap("log", t);
+    // housekeeping after the answer is ready; a failure here never affects the verdict
+    // @ts-ignore EdgeRuntime is provided by Supabase
+    EdgeRuntime.waitUntil(purgeOld(db).catch((e) => console.error("purge", e)));
     steps.total = Math.round(performance.now() - t0);
 
     return json({ id: ins.id, created_at: ins.created_at, accept: v.accept, reasons: v.reasons, usable_s: v.usable_s,
-      cer: v.cer, words: v.words, task, transcript: asr.text, detected_lang: asr.language, signal: sig, asr_model: ASR_MODEL, steps });
+      cer: v.cer, words: v.words, task, transcript: asr.text, detected_lang: asr.language, signal: sig, asr_model: ASR_MODEL, borderline: v.borderline, steps });
   } catch (e) {
     console.error(e);
     return json({ error: String((e as Error).message ?? e) }, 500);

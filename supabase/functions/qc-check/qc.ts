@@ -41,6 +41,20 @@ export function decodeWav(buf: Uint8Array): Float32Array {
   throw new Error("WAV has no data");
 }
 
+/** SHA-256 of the PCM samples only (the WAV header varies by recorder), used to catch the same recording uploaded twice. */
+export async function pcmSha256(buf: Uint8Array): Promise<string> {
+  const dv = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
+  const tag = (o: number) => String.fromCharCode(buf[o], buf[o + 1], buf[o + 2], buf[o + 3]);
+  let o = 12, data = buf;
+  while (o + 8 <= buf.length) {
+    const size = dv.getUint32(o + 4, true), body = o + 8;
+    if (tag(o) === "data") { data = buf.subarray(body, body + Math.floor(Math.min(size, buf.length - body) / 2) * 2); break; }
+    o = body + size + (size & 1);
+  }
+  const d = await crypto.subtle.digest("SHA-256", data);
+  return [...new Uint8Array(d)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
 function percentile(arr: ArrayLike<number>, p: number): number {
   const a = Float64Array.from(arr).sort();
   if (!a.length) return 0;
@@ -169,6 +183,8 @@ export function wrongLanguage(expected: string, asr: { language: string; text: s
   return SCRIPT[label] === script; // e.g. Spanish words for an English task: same alphabet, label agrees with the words
 }
 
+export const BORDER_CER = 0.05;
+
 export function verdict(sig: Signal, prompt: string, lang: string, asr: { language: string; text: string } | null, th: Thresholds = TH) {
   const reasons = signalReasons(sig, prompt, th);
   let c: number | null = null;
@@ -177,7 +193,10 @@ export function verdict(sig: Signal, prompt: string, lang: string, asr: { langua
     if (c > (th.max_cer[lang] ?? 0.25)) reasons.push(wrongLanguage(lang, asr) ? "wrong language" : "does not match the prompt");
   }
   const accept = reasons.length === 0;
-  return { accept, reasons, usable_s: accept ? sig.speech_s : 0, cer: c };
+  // Near the text limit the call is a coin flip: flag it so a person listens. The flag never changes the verdict.
+  const limit = th.max_cer[lang] ?? 0.25;
+  const borderline = c !== null && reasons.every((r) => r === "does not match the prompt") && Math.abs(c - limit) <= BORDER_CER;
+  return { accept, reasons, usable_s: accept ? sig.speech_s : 0, cer: c, borderline };
 }
 
 // Free conversation: no text to compare with. Demo rules, not measured against the targets.
@@ -197,5 +216,5 @@ export function freeVerdict(sig: Signal, lang: string, asr: { language: string; 
     else if (words < FREE.min_words) reasons.push("too few words");
   }
   const accept = reasons.length === 0;
-  return { accept, reasons, usable_s: accept ? sig.speech_s : 0, cer: null, words };
+  return { accept, reasons, usable_s: accept ? sig.speech_s : 0, cer: null, words, borderline: false };
 }

@@ -122,6 +122,8 @@
   .facts b { display: block; font-size: 20px; font-weight: 800; white-space: nowrap; }
   .facts span { font-size: 12px; color: #b9b9b9; }
   .match { margin-top: 12px; font-size: 13.5px; display: flex; gap: 8px; align-items: flex-start; }
+  .consent { margin-top: 10px; max-width: 46ch; }
+  .borderline { margin-top: 10px; font-size: 13.5px; }
   .match svg { width: 16px; height: 16px; flex: none; margin-top: 2px; }
   .empty { color: var(--muted); }
   table { border-collapse: collapse; width: 100%; font-size: 13.5px; font-variant-numeric: tabular-nums; }
@@ -248,6 +250,7 @@
             <label class="upload">Upload a file instead<input type="file" id="file" accept="audio/*" hidden></label>
             <span class="small muted" id="paynote"></span>
           </div>
+          <p class="small muted consent">By recording or uploading you agree that the audio is stored for this demo and deleted after 30 days. Don't say names, numbers or anything personal.</p>
         </div>
       </div>
       <div class="verdicts" id="out" aria-live="polite"></div>
@@ -303,6 +306,7 @@
         <ul class="limits">
           <li>The 97% and 2% come from defects planted in real recordings, so the right answer is known. Real buyer decisions are the next test.</li>
           <li>FLEURS is read in quiet rooms. A car, a cheap microphone and free speech will be harder. The free conversation task here runs on demo rules that have not been measured yet.</li>
+          <li>Fraud: the same file sent twice is caught. Replaying someone else's recording, text-to-speech and two accounts sharing one voice are not caught yet; they need speaker and synthetic-voice checks.</li>
         </ul>
       </div>
       <div>
@@ -384,7 +388,10 @@ const FREE_SCENARIOS = [
 ];
 const REASONS = { "too short or cut off": "too short or cut off", clipping: "too loud, clipped", "too quiet": "too quiet",
   "too noisy": "too noisy", "long silence": "long silence", "wrong language": "wrong language", "does not match the prompt": "words don't match the sentence",
-  "too little speech": "too little speech", "too few words": "too few words" };
+  "too little speech": "too little speech", "too few words": "too few words", "duplicate recording": "this exact recording was already sent" };
+// Logged with each check: where the audio came from and which try this is for the same sentence (fraud and UX signals).
+let source = 'mic';
+const attempts = new Map();
 
 let lang = "en", task = "read", scen = "correct", pi = 0;
 const scenList = () => task === 'free' ? FREE_SCENARIOS : SCENARIOS;
@@ -434,6 +441,7 @@ $('samples').onclick = async e => {
     sample = { prompt: m.prompt, label: 'Sample: ' + x.label, expect: x.expect, id: 'sample_' + m.variant };
     task = 'read'; lang = m.lang; scen = sample.id; renderPicker();
     resetNodes(); node('rec', 'done');
+    source = 'sample';
     await handle(buf);
   } catch (err) { $('out').innerHTML = '<div class="card"><h3>Verdict</h3><p class="empty" style="margin-top:8px">The sample could not be loaded. Try again.</p></div>'; }
   b.classList.remove('loading');
@@ -471,6 +479,7 @@ async function startRec() {
   rec.onstop = async () => { stream.getTracks().forEach(t => t.stop()); clearInterval(tick);
     $('recbtn').classList.remove('recording'); recIdle();
     node('rec', 'done', Math.round(performance.now() - tStart));
+    source = 'mic';
     await handle(await new Blob(chunks, { type: rec.mimeType }).arrayBuffer()); };
   rec.start(); tStart = performance.now(); resetNodes(); node('rec', 'active');
   $('recbtn').classList.add('recording');
@@ -480,7 +489,7 @@ async function startRec() {
   tick = setInterval(() => { const s = (performance.now() - tStart) / 1000; show(s); if (s >= (task === 'free' ? FREE.max_s : 30)) rec.state === 'recording' && rec.stop(); }, 100);
 }
 $('recbtn').onclick = () => (rec && rec.state === 'recording') ? rec.stop() : startRec();
-$('file').onchange = async e => { const f = e.target.files[0]; if (!f) return; resetNodes(); node('rec', 'done'); await handle(await f.arrayBuffer()); e.target.value = ''; };
+$('file').onchange = async e => { const f = e.target.files[0]; if (!f) return; resetNodes(); node('rec', 'done'); source = 'upload'; await handle(await f.arrayBuffer()); e.target.value = ''; };
 
 // ---------- check ----------
 function checkFree(sig) {
@@ -528,7 +537,8 @@ async function handle(buf) {
   node('upload', 'active');
   const form = new FormData();
   form.append('audio', wav, 'rec.wav'); form.append('lang', lang); form.append('prompt', prompt()); form.append('scenario', scen); form.append('task', task);
-  form.append('phone', JSON.stringify({ accept: phone.accept, reasons: phone.reasons }));
+  const key = task + '|' + prompt(), attempt = (attempts.get(key) || 0) + 1; attempts.set(key, attempt);
+  form.append('phone', JSON.stringify({ accept: phone.accept, reasons: phone.reasons, source, attempt }));
   const t1 = performance.now();
   ['signal', 'storage', 'asr', 'decision', 'log'].forEach(n => node(n, 'active'));
   let r, j;
@@ -548,6 +558,7 @@ async function handle(buf) {
   const match = s.expect === (j.accept ? 'accept' : 'reject');
   $('srv').innerHTML = `<h3>Verdict <small>${esc(s.label)} · check #${j.id}</small></h3>
     <div class="vline">${badge(j.accept)} <span>${esc(reasonText(j.reasons))}</span></div>
+    ${j.borderline ? `<p class="muted borderline">Close to the text limit: in production a person would listen to this one before it is paid. The verdict above does not change.</p>` : ''}
     <p class="heard">Heard: <i lang="${langNow}" dir="auto">${esc(j.transcript || '(nothing)')}</i></p>
     <div class="facts">
       ${taskNow === 'free' ? `<div><b class="num">${j.words ?? '–'}</b><span>words heard, need ${FREE.min_words}</span></div>` : `<div><b class="num">${j.cer == null ? '–' : Math.round(j.cer * 100) + '%'}</b><span>text error, limit ${Math.round(CER_LIMIT[langNow] * 100)}%</span></div>`}

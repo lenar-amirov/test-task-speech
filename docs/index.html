@@ -20,7 +20,7 @@
     --font: "Montserrat", system-ui, sans-serif;
     color-scheme: light;
   }
-  * { box-sizing: border-box; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html { scrollbar-color: #c9c9c9 transparent; }
   body { margin: 0; background: var(--lime); color: var(--ink); font: 500 15px/1.55 var(--font); -webkit-font-smoothing: antialiased; }
   ::selection { background: var(--lime); color: var(--ink); }
@@ -38,54 +38,54 @@
 
   .top { max-width: 1240px; margin: 0 auto; padding: 14px max(20px, env(safe-area-inset-right)) 18px max(20px, env(safe-area-inset-left)); display: flex; align-items: center; justify-content: space-between; gap: 12px; }
   .brand { font-weight: 700; font-size: 14px; }
-  .langs { display: flex; flex-wrap: wrap; background: var(--sheet); border-radius: 18px; padding: 4px; gap: 2px; margin-top: 18px; }
-  .langs button { flex: 1 1 auto; font: 700 14px var(--font); border: 0; background: transparent; color: var(--ink); padding: 8px 12px; border-radius: 14px; cursor: pointer; min-height: 44px; transition: background .15s; }
-  .langs button:hover { background: var(--tile); }
-  .langs button[aria-pressed="true"] { background: var(--ink); color: #fff; }
-  .langnote { margin-top: 8px; font-size: 13px; color: var(--ink-2); }
-  .prompt:dir(rtl), .prompt[dir="rtl"] { font-size: 24px; line-height: 1.7; }
 
   .sheet { background: var(--sheet); border-radius: var(--r-sheet) var(--r-sheet) 0 0; min-height: 100vh; }
   .wrap { max-width: 1240px; margin: 0 auto; padding: 0 max(20px, env(safe-area-inset-right)) 0 max(20px, env(safe-area-inset-left)); }
   section { padding: 44px 0; }
   section + section { border-top: 1px solid var(--line); }
 
-  .hero { padding-top: 40px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
-  .hero p.lead { font-size: 18px; color: var(--ink-2); margin-top: 16px; max-width: 46ch; }
-  .result { background: var(--tile); border-radius: var(--r-card); padding: 22px 24px; }
-  .result .row2 { display: flex; gap: 28px; margin: 6px 0 12px; }
-  .result b { display: block; font-size: clamp(24px, 3vw, 32px); font-weight: 800; letter-spacing: -0.03em; line-height: 1; }
-  .result span { font-size: 13.5px; color: var(--ink-2); }
+  .hero { padding-top: 44px; max-width: 900px; }
+  .hero p.lead { font-size: 19px; color: var(--ink-2); margin-top: 18px; max-width: 58ch; }
+  .hero p.lead b { color: var(--ink); font-weight: 700; background: linear-gradient(transparent 62%, var(--lime) 62%); }
+  .fine { margin-top: 12px; font-size: 13.5px; color: var(--muted); }
 
-  /* the task: the app's own card */
-  .task-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 22px; align-items: start; }
-  .task { background: var(--tile); border-radius: var(--r-card); padding: 22px; }
-  .task-head { display: flex; gap: 14px; align-items: center; }
-  .ico { width: 52px; height: 52px; flex: none; border-radius: 16px; background: var(--sheet); display: grid; place-items: center; }
-  .ico svg { width: 26px; height: 26px; }
-  .pay { margin-left: auto; font-weight: 700; white-space: nowrap; }
-  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
-  .chip { font: 600 14px var(--font); border: 0; background: var(--sheet); color: var(--ink); border-radius: var(--r-pill); padding: 10px 16px; cursor: pointer; min-height: 44px; transition: background .15s, transform .1s; }
-  .chip:hover { background: var(--tile-2); }
+  /* the recorder */
+  .studio { margin-top: 22px; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); background: var(--sheet); border: 1px solid var(--line); border-radius: 28px; box-shadow: 0 1px 2px rgba(20,20,20,.04), 0 12px 32px -12px rgba(20,20,20,.14); overflow: hidden; }
+  .setup { background: var(--tile); padding: 26px; display: grid; gap: 26px; align-content: start; }
+  .stage { padding: 30px 34px; display: flex; flex-direction: column; }
+  .label { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 15px; }
+  .label i { font-style: normal; width: 26px; height: 26px; border-radius: 50%; background: var(--ink); color: #fff; display: grid; place-items: center; font-size: 13px; flex: none; }
+  .langs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+  .langs button { font: 600 14px var(--font); border: 1px solid #d9d9d9; background: var(--sheet); color: var(--ink); padding: 8px 14px; border-radius: var(--r-pill); cursor: pointer; min-height: 44px; transition: background .15s, border-color .15s; }
+  .langs button:hover { border-color: var(--ink); }
+  .langs button[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: #fff; }
+  .langnote { margin-top: 10px; font-size: 13px; color: var(--ink-2); }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+  .chip { font: 600 14px var(--font); border: 1px solid #d9d9d9; background: var(--sheet); color: var(--ink); border-radius: var(--r-pill); padding: 8px 14px; cursor: pointer; min-height: 44px; transition: background .15s, border-color .15s, transform .1s; }
+  .chip:hover { border-color: var(--ink); }
   .chip:active { transform: scale(.97); }
-  .chip[aria-pressed="true"] { background: var(--ink); color: #fff; }
-  .prompt-box { background: var(--sheet); border-radius: 18px; padding: 18px; margin-top: 16px; }
-  .prompt { font-size: 22px; font-weight: 700; line-height: 1.35; letter-spacing: -0.01em; margin-top: 6px; }
+  .chip[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: #fff; }
   .howto { margin-top: 12px; background: var(--warn-bg); color: var(--warn-ink); border-radius: 14px; padding: 10px 14px; font-size: 14px; }
   .howto strong { color: var(--ink); }
-  .linkbtn { font: 600 14px var(--font); background: none; border: 0; padding: 10px 0 0; color: var(--ink); cursor: pointer; display: inline-flex; gap: 6px; align-items: center; min-height: 44px; }
+  .prompt { font-size: clamp(24px, 2.4vw, 32px); font-weight: 700; line-height: 1.3; letter-spacing: -0.015em; margin-top: 18px; text-wrap: pretty; }
+  .prompt[dir="rtl"] { font-size: clamp(26px, 2.6vw, 34px); line-height: 1.75; }
+  .linkbtn { align-self: flex-start; font: 600 14px var(--font); background: none; border: 0; padding: 0; margin-top: 10px; color: var(--ink-2); cursor: pointer; display: inline-flex; gap: 6px; align-items: center; min-height: 44px; }
+  .linkbtn:hover { color: var(--ink); text-decoration: underline; text-decoration-color: var(--lime-deep); text-decoration-thickness: 2px; text-underline-offset: 3px; }
   .linkbtn svg { width: 16px; height: 16px; }
-  .cta { width: 100%; margin-top: 16px; font: 700 17px var(--font); border: 0; border-radius: 20px; background: var(--lime); color: var(--ink); min-height: 60px; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; transition: background .15s, transform .1s; }
-  .cta:hover { background: var(--lime-deep); }
-  .cta:active { transform: scale(.985); }
-  .cta svg { width: 22px; height: 22px; }
-  .cta.recording { background: var(--ink); color: #fff; }
-  .cta .dot { width: 10px; height: 10px; border-radius: 50%; background: #ff5a3c; animation: pulse 1s ease-in-out infinite; }
-  @keyframes pulse { 50% { opacity: .35; } }
-  .sub { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+  .rec-row { display: flex; align-items: center; gap: 20px; margin-top: auto; padding-top: 24px; }
+  .recbtn { position: relative; flex: none; width: 92px; height: 92px; border-radius: 50%; border: 0; background: var(--lime); color: var(--ink); display: grid; place-items: center; cursor: pointer; box-shadow: 0 8px 20px -6px rgba(120,160,0,.55), inset 0 -3px 0 rgba(0,0,0,.08); transition: transform .15s, box-shadow .15s, background .15s; }
+  .recbtn:hover { background: var(--lime-deep); transform: translateY(-2px); box-shadow: 0 12px 24px -6px rgba(120,160,0,.6), inset 0 -3px 0 rgba(0,0,0,.08); }
+  .recbtn:active { transform: translateY(0) scale(.96); }
+  .recbtn svg { width: 36px; height: 36px; }
+  .recbtn .sq { width: 26px; height: 26px; border-radius: 6px; background: #fff; }
+  .recbtn.recording { background: var(--ink); color: #fff; box-shadow: none; }
+  .recbtn.recording::after { content: ""; position: absolute; inset: -8px; border-radius: 50%; border: 3px solid #ff5a3c; animation: ring 1.4s ease-out infinite; }
+  @keyframes ring { from { opacity: .9; transform: scale(.92); } to { opacity: 0; transform: scale(1.12); } }
+  .reclabel { font-weight: 800; font-size: 20px; letter-spacing: -0.01em; }
+  .sub { display: flex; justify-content: space-between; align-items: center; gap: 6px 16px; margin-top: 14px; flex-wrap: wrap; border-top: 1px solid var(--line); padding-top: 8px; }
   .upload { font: 600 14px var(--font); color: var(--ink); cursor: pointer; text-decoration: underline; text-decoration-color: var(--lime-deep); text-decoration-thickness: 2px; text-underline-offset: 3px; min-height: 44px; display: inline-flex; align-items: center; }
-
-  .verdict-col { scroll-margin-top: 16px; display: flex; flex-direction: column; gap: 14px; }
+  .verdicts { scroll-margin-top: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; align-items: start; }
+  .verdicts:empty { display: none; }
   .card { border: 1px solid var(--line); border-radius: var(--r-card); padding: 20px; background: var(--sheet); }
   .card.server { background: var(--ink); color: #fff; border-color: var(--ink); }
   .card.server .muted { color: #b9b9b9; }
@@ -140,7 +140,11 @@
   footer { padding: 28px 0 48px; border-top: 1px solid var(--line); font-size: 13px; color: var(--muted); }
 
   @media (max-width: 860px) {
-    .hero, .task-grid, .lanes, .two { grid-template-columns: 1fr; }
+    .hero, .lanes, .two, .studio, .verdicts { grid-template-columns: 1fr; }
+    .setup { padding: 20px; gap: 22px; }
+    .stage { padding: 22px 20px; }
+    .recbtn { width: 76px; height: 76px; }
+    .hero p.lead { font-size: 17px; }
     .lane.srv .steps { grid-template-columns: 1fr; }
     section { padding: 32px 0; }
     .hero { padding-top: 28px; }
@@ -168,54 +172,50 @@
 <main class="sheet">
   <div class="wrap">
     <section class="hero" aria-labelledby="h1">
-      <div>
-        <h1 id="h1">Is this recording good enough to pay for?</h1>
-        <p class="lead">Drivers and passengers read a sentence into their phone for a few tenge. Before we pay and ship it to a buyer, this check answers: accept, or re-record with a reason. Try it with your own voice.</p>
-      </div>
-      <div class="result">
-        <p><strong>Tested on 300 recordings it never saw</strong></p>
-        <div class="row2">
-          <div><b class="num">97%</b><span>bad ones caught<br>145 of 150</span></div>
-          <div><b class="num">2%</b><span>good ones rejected<br>3 of 150</span></div>
-        </div>
-        <p class="small muted">Targets ≥90% and ≤5%. Thresholds frozen before the test. FLEURS Spanish, Kazakh, Urdu.</p>
-      </div>
+      <h1 id="h1">Is this recording good enough to pay for?</h1>
+      <p class="lead">Drivers and passengers read a sentence into their phone for a few tenge. Before we pay and ship it to a buyer, this check answers: accept, or re-record with a reason. On 300 recordings it had never seen, it caught <b>145 of 150 bad ones (97%)</b> and wrongly rejected <b>3 of 150 good ones (2%)</b>.</p>
+      <p class="fine">Targets were ≥90% and ≤5%. Thresholds were frozen before that test. Recordings: FLEURS Spanish, Kazakh, Urdu.</p>
     </section>
 
-    <section aria-labelledby="try">
-      <h2 id="try">Record a sentence</h2>
-      <div class="task-grid">
-        <div class="task">
-          <div class="task-head">
-            <div class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></div>
-            <div><h3>Read the text aloud</h3><p class="small muted">About 10 seconds</p></div>
-            <span class="pay num">75 ₸</span>
+    <section class="try" aria-labelledby="try">
+      <h2 id="try">Try it with your voice</h2>
+      <div class="studio">
+        <div class="setup">
+          <div class="field">
+            <span class="label" id="l-lang"><i>1</i>Language of the task</span>
+            <div class="langs" role="group" aria-labelledby="l-lang">
+              <button type="button" data-lang="en" aria-pressed="true" lang="en">English</button>
+              <button type="button" data-lang="ru" aria-pressed="false" lang="ru">Русский</button>
+              <button type="button" data-lang="es" aria-pressed="false" lang="es">Español</button>
+              <button type="button" data-lang="kk" aria-pressed="false" lang="kk">Қазақша</button>
+              <button type="button" data-lang="ur" aria-pressed="false" lang="ur">اردو</button>
+            </div>
+            <p class="langnote" id="langnote"></p>
           </div>
-          <div class="langs" role="group" aria-label="Language of the task">
-            <button type="button" data-lang="en" aria-pressed="true" lang="en">English</button>
-            <button type="button" data-lang="ru" aria-pressed="false" lang="ru">Русский</button>
-            <button type="button" data-lang="es" aria-pressed="false" lang="es">Español</button>
-            <button type="button" data-lang="kk" aria-pressed="false" lang="kk">Қазақша</button>
-            <button type="button" data-lang="ur" aria-pressed="false" lang="ur">اردو</button>
-          </div>
-          <p class="langnote" id="langnote"></p>
-          <div class="chips" id="scenarios" role="group" aria-label="What to try"></div>
-          <div class="prompt-box">
-            <p class="small muted">The app asks you to read</p>
-            <p class="prompt" id="prompt"></p>
-            <button type="button" class="linkbtn" id="another"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.6-6.4M21 4v5h-5"/></svg>Another sentence</button>
-          </div>
-          <p class="howto" id="howto"></p>
-          <button type="button" class="cta" id="recbtn"></button>
-          <div class="sub">
-            <span class="small muted" id="micnote">Your browser asks for the microphone. Stops by itself after 30 s.</span>
-            <label class="upload">Upload a file instead<input type="file" id="file" accept="audio/*" hidden></label>
+          <div class="field">
+            <span class="label" id="l-scen"><i>2</i>What to try</span>
+            <div class="chips" id="scenarios" role="group" aria-labelledby="l-scen"></div>
+            <p class="howto" id="howto"></p>
           </div>
         </div>
-        <div class="verdict-col" id="out" aria-live="polite">
-          <div class="card"><h3>Verdict</h3><p class="empty" style="margin-top:8px">Record, and the phone checks answer at once. The server answers a second later with what it heard.</p></div>
+        <div class="stage">
+          <span class="label"><i>3</i>Read this aloud and record</span>
+          <p class="prompt" id="prompt"></p>
+          <button type="button" class="linkbtn" id="another"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.6-6.4M21 4v5h-5"/></svg>Another sentence</button>
+          <div class="rec-row">
+            <button type="button" class="recbtn" id="recbtn" aria-describedby="reclabel"></button>
+            <div>
+              <p class="reclabel" id="reclabel" aria-live="polite">Record</p>
+              <p class="small muted" id="micnote">Your browser asks for the microphone. Stops by itself after 30 s.</p>
+            </div>
+          </div>
+          <div class="sub">
+            <label class="upload">Upload a file instead<input type="file" id="file" accept="audio/*" hidden></label>
+            <span class="small muted">In the app this is a 10-second task paid <span class="num">75 ₸</span>.</span>
+          </div>
         </div>
       </div>
+      <div class="verdicts" id="out" aria-live="polite"></div>
     </section>
 
     <section aria-labelledby="arch">
@@ -326,7 +326,7 @@ let lang = "en", scen = "correct", pi = 0;
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const prompt = () => PROMPTS[lang][pi % PROMPTS[lang].length];
-const recIdle = () => `${ICON.mic}Record`;
+const recIdle = () => { $('recbtn').innerHTML = ICON.mic; $('recbtn').setAttribute('aria-label', 'Start recording'); $('reclabel').textContent = 'Tap to record'; };
 
 function renderPicker() {
   document.querySelectorAll('[data-lang]').forEach(b => b.setAttribute('aria-pressed', b.dataset.lang === lang));
@@ -340,7 +340,7 @@ function renderPicker() {
 document.querySelectorAll('[data-lang]').forEach(b => b.onclick = () => { lang = b.dataset.lang; renderPicker(); });
 $('scenarios').onclick = e => { const b = e.target.closest('[data-s]'); if (b) { scen = b.dataset.s; renderPicker(); } };
 $('another').onclick = () => { pi++; renderPicker(); };
-$('recbtn').innerHTML = recIdle();
+recIdle();
 renderPicker();
 
 // ---------- architecture highlighting ----------
@@ -371,12 +371,13 @@ async function startRec() {
   chunks = []; rec = new MediaRecorder(stream);
   rec.ondataavailable = e => e.data.size && chunks.push(e.data);
   rec.onstop = async () => { stream.getTracks().forEach(t => t.stop()); clearInterval(tick);
-    $('recbtn').classList.remove('recording'); $('recbtn').innerHTML = recIdle();
+    $('recbtn').classList.remove('recording'); recIdle();
     node('rec', 'done', Math.round(performance.now() - tStart));
     await handle(await new Blob(chunks, { type: rec.mimeType }).arrayBuffer()); };
   rec.start(); tStart = performance.now(); resetNodes(); node('rec', 'active');
   $('recbtn').classList.add('recording');
-  const show = s => { $('recbtn').innerHTML = `<span class="dot"></span>Stop · <span class="num">${s.toFixed(1)} s</span>`; };
+  $('recbtn').innerHTML = '<span class="sq"></span>'; $('recbtn').setAttribute('aria-label', 'Stop recording');
+  const show = s => { $('reclabel').innerHTML = `Recording <span class="num">${s.toFixed(1)} s</span> · tap to stop`; };
   show(0);
   tick = setInterval(() => { const s = (performance.now() - tStart) / 1000; show(s); if (s >= 30) rec.state === 'recording' && rec.stop(); }, 100);
 }

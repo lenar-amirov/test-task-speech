@@ -1,0 +1,72 @@
+[
+ {
+  "file": "clean_es.wav",
+  "variant": "clean",
+  "label": "accept",
+  "lang": "es",
+  "prompt": "La incorporación de durmientes para mantener a los rieles en su lugar se produjo bastante temprano. No obstante, paulatinamente, fueron dándose cuenta de que los rieles resultarían más eficientes si estuvieran revestidos de hierro en su parte superior."
+ },
+ {
+  "file": "clean_kk.wav",
+  "variant": "clean",
+  "label": "accept",
+  "lang": "kk",
+  "prompt": "Баспанасыз балалар тастап кеткенге немесе қашып кеткенге дейін балаларға қарсы зорлық-зомбылықты көрген немесе жанжарақатын алған болуы мүмкін."
+ },
+ {
+  "file": "clean_ur.wav",
+  "variant": "clean",
+  "label": "accept",
+  "lang": "ur",
+  "prompt": "بالی میں دیگر ایجنڈے میں دنیا کے باقی ماندہ جنگلات کا تحفظ، اور کم آلودگی کے طریقے سے ترقی کرنے کیلئے ترقی پذیر ممالک کے ساتھ ٹیکنالوجز کا اشتراک کرنے کا موضوع شامل کیا گیا۔"
+ },
+ {
+  "file": "mild_noise_es.wav",
+  "variant": "mild_noise",
+  "label": "accept",
+  "lang": "es",
+  "prompt": "Compartir una excursión en forma virtual también es una excelente forma de reflexionar sobre una salida y compartir experiencias con clases futuras."
+ },
+ {
+  "file": "heavy_noise_es.wav",
+  "variant": "heavy_noise",
+  "label": "reject",
+  "lang": "es",
+  "prompt": "Durante esta fase de la historia de Europa, la iglesia católica, que había acumulado riqueza y poder, fue cuestionada."
+ },
+ {
+  "file": "clipping_es.wav",
+  "variant": "clipping",
+  "label": "reject",
+  "lang": "es",
+  "prompt": "En efecto, es muy difícil de encontrar, incluso si uno estuviera seguro de su existencia. En el interior de la cueva, el aislamiento es total."
+ },
+ {
+  "file": "long_silence_kk.wav",
+  "variant": "long_silence",
+  "label": "reject",
+  "lang": "kk",
+  "prompt": "Ол бізге пойызды, автокөлікті және басқа да көлік құралдарын алып келді."
+ },
+ {
+  "file": "wrong_language_ur.wav",
+  "variant": "wrong_language",
+  "label": "reject",
+  "lang": "ur",
+  "prompt": "سندربن دنیا کا سب سے بڑا ساحلی مینگروو بیلٹ ہے، جو ساحلی علاقے سے بنگلادیشی اور ہندوستان کے دور افتادہ پسماندہ علاقے میں 80 کیلو میٹر (50 میل) تک پھیلا ہوا ہے۔"
+ },
+ {
+  "file": "wrong_text_es.wav",
+  "variant": "wrong_text",
+  "label": "reject",
+  "lang": "es",
+  "prompt": "Uno de los periodos más sanguinarios de la historia de Antigua China fue el de Los Tres Reinos, donde miles de personas murieron en una lucha por ocupar el trono del gran palacio en Xi'an."
+ },
+ {
+  "file": "cut_off_kk.wav",
+  "variant": "cut_off",
+  "label": "reject",
+  "lang": "kk",
+  "prompt": "Ең оңай қол жеткізуге болаты өсімдік ресурстарына жапырақтар мен бұршақтарда қолжетімді ақуыздар болды, бірақ әзірлемесе, олар біз сияқты приматтар үшін қорытуға қиын."
+ }
+]

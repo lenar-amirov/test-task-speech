@@ -93,7 +93,15 @@
   .reclabel { font-weight: 800; font-size: 20px; letter-spacing: -0.01em; }
   .sub { display: flex; justify-content: space-between; align-items: center; gap: 6px 16px; margin-top: 14px; flex-wrap: wrap; border-top: 1px solid var(--line); padding-top: 8px; }
   .upload { font: 600 14px var(--font); color: var(--ink); cursor: pointer; text-decoration: underline; text-decoration-color: var(--lime-deep); text-decoration-thickness: 2px; text-underline-offset: 3px; min-height: 44px; display: inline-flex; align-items: center; }
-  .verdicts { scroll-margin-top: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; align-items: start; }
+  .verdicts { scroll-margin-top: 16px; display: grid; gap: 12px; margin-top: 16px; }
+  .samplebar { margin-top: 18px; background: var(--lime-soft); border-radius: 20px; padding: 16px 18px; }
+  .samplebar .chips { margin-top: 10px; }
+  .samplebar .chip { border-color: transparent; }
+  .chip.loading { opacity: .6; cursor: progress; }
+  .or { margin-top: 22px; font-weight: 700; }
+  details.more { border: 1px solid var(--line); border-radius: var(--r-card); padding: 14px 20px; background: var(--sheet); }
+  details.more summary { cursor: pointer; font-weight: 700; min-height: 32px; display: flex; align-items: center; }
+  details.more[open] summary { margin-bottom: 8px; }
   .verdicts:empty { display: none; }
   .card { border: 1px solid var(--line); border-radius: var(--r-card); padding: 20px; background: var(--sheet); }
   .card.server { background: var(--ink); color: #fff; border-color: var(--ink); }
@@ -192,7 +200,12 @@
     </section>
 
     <section class="try" aria-labelledby="try">
-      <h2 id="try">Try it with your voice</h2>
+      <h2 id="try">Try it</h2>
+      <div class="samplebar">
+        <p><b>No microphone needed:</b> check a real recording the system never saw while it was tuned.</p>
+        <div class="chips" id="samples" role="group" aria-label="Sample recordings"></div>
+      </div>
+      <p class="or">Or record your own voice:</p>
       <div class="studio">
         <div class="setup">
           <div class="field">
@@ -375,10 +388,11 @@ const REASONS = { "too short or cut off": "too short or cut off", clipping: "too
 
 let lang = "en", task = "read", scen = "correct", pi = 0;
 const scenList = () => task === 'free' ? FREE_SCENARIOS : SCENARIOS;
-const findScen = id => SCENARIOS.concat(FREE_SCENARIOS).find(s => s.id === id);
+const findScen = id => (sample && sample.id === id) ? sample : SCENARIOS.concat(FREE_SCENARIOS).find(s => s.id === id) || { id, label: id.replace('sample_', 'Sample: '), expect: '' };
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-const prompt = () => { const list = task === 'free' ? TOPICS[lang] : PROMPTS[lang]; return list[pi % list.length]; };
+let sample = null; // a sample recording fixes the sentence and language until the visitor changes anything
+const prompt = () => { if (sample) return sample.prompt; const list = task === 'free' ? TOPICS[lang] : PROMPTS[lang]; return list[pi % list.length]; };
 const recIdle = () => { $('recbtn').innerHTML = ICON.mic; $('recbtn').setAttribute('aria-label', 'Start recording'); $('reclabel').textContent = 'Tap to record'; };
 
 function renderPicker() {
@@ -389,17 +403,41 @@ function renderPicker() {
   $('another').hidden = free; $('freecheck').hidden = !free;
   $('micnote').textContent = `Your browser asks for the microphone. Stops by itself after ${free ? FREE.max_s : 30} s.`;
   $('paynote').innerHTML = free ? 'In the app this would be a longer, better-paid task: unscripted speech sells for more.' : 'In the app this is a 10-second task paid <span class="num">75 ₸</span>.';
-  $('scenarios').innerHTML = scenList().map(s => `<button type="button" class="chip" data-s="${s.id}" aria-pressed="${s.id === scen}">${esc(s.label)}</button>`).join('');
+  $('scenarios').innerHTML = scenList().map(s => `<button type="button" class="chip" data-s="${s.id}" aria-pressed="${!sample && s.id === scen}">${esc(s.label)}</button>`).join('');
   $('prompt').textContent = prompt();
   $('prompt').lang = lang; $('prompt').dir = lang === 'ur' ? 'rtl' : 'ltr';
   $('langnote').textContent = free ? 'Free conversation runs on demo rules that have not been measured yet.' : MEASURED[lang] ? `${LANG_LABEL[lang]} is one of the three languages the 97% and 2% were measured on.` : `${LANG_LABEL[lang]} is here so you can try it; it was not part of the measured test.`;
   const s = findScen(scen);
-  $('howto').innerHTML = `<strong>Should get: ${s.expect === 'accept' ? 'accept' : 're-record'}.</strong> ${s.html ? s.how(lang) : esc(s.how(lang))}`;
+  $('howto').innerHTML = `<strong>Should get: ${s.expect === 'accept' ? 'accept' : 're-record'}.</strong> ${sample ? 'A real recording from the test set; the sentence on the right is what the speaker was asked to read.' : s.html ? s.how(lang) : esc(s.how(lang))}`;
 }
-document.querySelectorAll('[data-lang]').forEach(b => b.onclick = () => { lang = b.dataset.lang; renderPicker(); });
-document.querySelectorAll('[data-task]').forEach(b => b.onclick = () => { if (task === b.dataset.task) return; task = b.dataset.task; scen = scenList()[0].id; pi = 0; renderPicker(); });
-$('scenarios').onclick = e => { const b = e.target.closest('[data-s]'); if (b) { scen = b.dataset.s; renderPicker(); } };
-$('another').onclick = () => { pi++; renderPicker(); };
+document.querySelectorAll('[data-lang]').forEach(b => b.onclick = () => { sample = null; lang = b.dataset.lang; renderPicker(); });
+document.querySelectorAll('[data-task]').forEach(b => b.onclick = () => { if (task === b.dataset.task) return; sample = null; task = b.dataset.task; scen = scenList()[0].id; pi = 0; renderPicker(); });
+$('scenarios').onclick = e => { const b = e.target.closest('[data-s]'); if (b) { sample = null; scen = b.dataset.s; renderPicker(); } };
+$('another').onclick = () => { sample = null; pi++; renderPicker(); };
+const SAMPLE_LIST = [
+  { file: 'clean_es.wav', label: 'Good recording · Spanish', expect: 'accept' },
+  { file: 'wrong_text_es.wav', label: 'Wrong sentence · Spanish', expect: 'reject' },
+  { file: 'heavy_noise_es.wav', label: 'Heavy noise · Spanish', expect: 'reject' },
+  { file: 'cut_off_kk.wav', label: 'Cut off · Kazakh', expect: 'reject' },
+  { file: 'wrong_language_ur.wav', label: 'Wrong language · Urdu task', expect: 'reject' },
+];
+let SAMPLE_META = null;
+$('samples').innerHTML = SAMPLE_LIST.map((x, i) => `<button type="button" class="chip" data-sample="${i}">${esc(x.label)}</button>`).join('');
+$('samples').onclick = async e => {
+  const b = e.target.closest('[data-sample]'); if (!b || b.classList.contains('loading')) return;
+  const x = SAMPLE_LIST[+b.dataset.sample];
+  b.classList.add('loading');
+  try {
+    SAMPLE_META = SAMPLE_META || await (await fetch('samples/samples.json')).json();
+    const m = SAMPLE_META.find(m => m.file === x.file);
+    const buf = await (await fetch('samples/' + x.file)).arrayBuffer();
+    sample = { prompt: m.prompt, label: 'Sample: ' + x.label, expect: x.expect, id: 'sample_' + m.variant };
+    task = 'read'; lang = m.lang; scen = sample.id; renderPicker();
+    resetNodes(); node('rec', 'done');
+    await handle(buf);
+  } catch (err) { $('out').innerHTML = '<div class="card"><h3>Verdict</h3><p class="empty" style="margin-top:8px">The sample could not be loaded. Try again.</p></div>'; }
+  b.classList.remove('loading');
+};
 recIdle();
 renderPicker();
 
@@ -458,12 +496,12 @@ function sigTable(sig) {
   const free = task === 'free';
   const need = free ? FREE.min_speech_s : TH.min_speech_ratio * Math.max(1, prompt().length / TH.chars_per_s);
   const gap = free ? FREE.max_gap_s : TH.max_gap_s;
-  return `<div class="scroll"><table><tr><th>Measure</th><th>Value</th><th>Limit</th></tr>
-  <tr><td>Speech</td><td>${sig.speech_s.toFixed(1)} s</td><td>≥ ${need.toFixed(1)} s</td></tr>
-  <tr><td>Noise (SNR)</td><td>${sig.snr_db.toFixed(1)} dB</td><td>≥ ${TH.min_snr_db} dB</td></tr>
+  return `<div class="scroll"><table><tr><th>What we measure</th><th>This recording</th><th>Needed</th></tr>
+  <tr><td>How long you spoke</td><td>${sig.speech_s.toFixed(1)} s</td><td>≥ ${need.toFixed(1)} s</td></tr>
+  <tr><td>Voice louder than background (SNR)</td><td>${sig.snr_db.toFixed(1)} dB</td><td>≥ ${TH.min_snr_db} dB</td></tr>
   <tr><td>Loudness</td><td>${sig.speech_dbfs.toFixed(1)} dBFS</td><td>≥ ${TH.min_speech_dbfs}</td></tr>
-  <tr><td>Clipped samples</td><td>${(sig.clip_ratio * 100).toFixed(2)}%</td><td>≤ ${(TH.max_clip_ratio * 100).toFixed(2)}%</td></tr>
-  <tr><td>Silence: start / end / pause</td><td>${sig.lead_silence_s.toFixed(1)} / ${sig.trail_silence_s.toFixed(1)} / ${sig.max_gap_s.toFixed(1)} s</td><td>≤ ${TH.max_edge_silence_s} / ${TH.max_edge_silence_s} / ${gap} s</td></tr></table></div>`;
+  <tr><td>Distortion from a too-loud mic</td><td>${(sig.clip_ratio * 100).toFixed(2)}%</td><td>≤ ${(TH.max_clip_ratio * 100).toFixed(2)}%</td></tr>
+  <tr><td>Silence at start / end / longest pause</td><td>${sig.lead_silence_s.toFixed(1)} / ${sig.trail_silence_s.toFixed(1)} / ${sig.max_gap_s.toFixed(1)} s</td><td>≤ ${TH.max_edge_silence_s} / ${TH.max_edge_silence_s} / ${gap} s</td></tr></table></div>`;
 }
 const badge = ok => ok ? `<span class="pill ok">${ICON.check}Accept</span>` : `<span class="pill bad">${ICON.redo}Re-record</span>`;
 const reasonText = rs => rs.map(r => REASONS[r] || r).join(', ');
@@ -479,14 +517,13 @@ async function handle(buf) {
   const wav = wavFrom(x), url = URL.createObjectURL(wav);
   const s = findScen(scen), taskNow = task, langNow = lang;
   const showOut = () => { const r = out.getBoundingClientRect(); if (r.top > innerHeight * 0.6 || r.bottom < 0) out.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }); };
-  out.innerHTML = `<div class="card server" id="srv"><h3>Server verdict <small>${esc(s.label)}</small></h3><p class="muted" style="margin-top:8px">Listening…</p></div>
-    <div class="card"><h3>Phone checks <small>instant</small></h3>
-      <div class="vline">${badge(phone.accept)} <span>${esc(reasonText(phone.reasons))}</span></div>
-      ${phone.accept ? '' : '<p class="note-box">In the app the contributor re-records now and nothing is uploaded. Here it goes to the server anyway, so you can see that side.</p>'}
+  out.innerHTML = `<div class="card server" id="srv"><h3>Verdict <small>${esc(s.label)}</small></h3><p class="muted" style="margin-top:8px">Listening…</p></div>
+    <details class="more"><summary>Details: the instant phone check and the measurements</summary>
+      <p class="small muted">The phone checks the sound before anything is uploaded. Here it said: ${phone.accept ? 'accept' : 're-record (' + esc(reasonText(phone.reasons)) + ')'}. ${phone.accept ? '' : 'In the app the contributor would re-record at this point; here the recording goes on to the server so you can see the full check.'} The verdict above is the server's, which also listens for the words.</p>
       ${sigTable(sig)}
-      <audio controls src="${url}"></audio></div>`;
+      <audio controls src="${url}"></audio></details>`;
   showOut();
-  if (!CFG.supabaseUrl || !CFG.anonKey) { $('srv').innerHTML = '<h3>Server verdict</h3><p class="muted" style="margin-top:8px">No server on this copy of the page; only the phone checks ran.</p>'; return; }
+  if (!CFG.supabaseUrl || !CFG.anonKey) { $('srv').innerHTML = `<h3>Verdict <small>phone check only</small></h3><div class="vline">${badge(phone.accept)} <span>${esc(reasonText(phone.reasons))}</span></div><p class="muted" style="margin-top:8px">No server on this copy of the page, so the words were not checked.</p>`; return; }
 
   node('upload', 'active');
   const form = new FormData();
@@ -502,14 +539,14 @@ async function handle(buf) {
   const rtt = Math.round(performance.now() - t1);
   if (!r || !r.ok || j.error) {
     ['upload', 'signal', 'storage', 'asr', 'decision', 'log'].forEach(n => node(n, 'fail'));
-    $('srv').innerHTML = `<h3>Server verdict</h3><p class="muted" style="margin-top:8px">${esc(j.error || 'Server error')}. The phone verdict below still stands; try again in a minute.</p>`; return;
+    $('srv').innerHTML = `<h3>Verdict <small>phone check only</small></h3><div class="vline">${badge(phone.accept)} <span>${esc(reasonText(phone.reasons))}</span></div><p class="muted" style="margin-top:8px">The server did not answer (${esc(j.error || 'error')}), so the words were not checked. Try again in a minute.</p>`; return;
   }
   const st = j.steps || {};
   node('upload', 'done', Math.max(0, rtt - (st.total || 0)));
   ['signal', 'storage', 'asr', 'decision', 'log'].forEach(n => node(n, 'done', st[n]));
   if (!j.accept) node('decision', 'fail', st.decision);
   const match = s.expect === (j.accept ? 'accept' : 'reject');
-  $('srv').innerHTML = `<h3>Server verdict <small>${esc(s.label)} · check #${j.id}</small></h3>
+  $('srv').innerHTML = `<h3>Verdict <small>${esc(s.label)} · check #${j.id}</small></h3>
     <div class="vline">${badge(j.accept)} <span>${esc(reasonText(j.reasons))}</span></div>
     <p class="heard">Heard: <i lang="${langNow}" dir="auto">${esc(j.transcript || '(nothing)')}</i></p>
     <div class="facts">
@@ -517,7 +554,7 @@ async function handle(buf) {
       <div><b class="num">${(j.usable_s || 0).toFixed(1)} s</b><span>speech we pay for</span></div>
       <div><b class="num">${(rtt / 1000).toFixed(1)} s</b><span>round trip</span></div>
     </div>
-    <p class="match">${match ? ICON.check + 'That is what this case should get.' : ICON.x + 'Not what this case should get. Misses like this are what the measured error rates count.'}</p>`;
+    ${s.expect ? `<p class="match">${match ? ICON.check + 'That is what this case should get.' : ICON.x + 'Not what this case should get. Misses like this are what the measured error rates count.'}</p>` : ''}`;
 }
 
 </script>

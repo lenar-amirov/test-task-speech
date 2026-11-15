@@ -1,0 +1,664 @@
+{
+  "dev": {
+    "n": 390,
+    "bad": 219,
+    "caught": 163,
+    "recall": 0.7443,
+    "recall_ci95": [
+      0.6826,
+      0.7975
+    ],
+    "good": 171,
+    "wrongly_rejected": 7,
+    "false_reject_rate": 0.0409,
+    "false_reject_ci95": [
+      0.02,
+      0.0821
+    ],
+    "borderline_flagged": 31,
+    "by_variant": {
+      "clipping": {
+        "n": 21,
+        "right": 21
+      },
+      "wrong_language": {
+        "n": 25,
+        "right": 25
+      },
+      "long_silence": {
+        "n": 16,
+        "right": 16
+      },
+      "mild_noise": {
+        "n": 40,
+        "right": 39
+      },
+      "clean": {
+        "n": 118,
+        "right": 112
+      },
+      "heavy_noise": {
+        "n": 22,
+        "right": 16
+      },
+      "cut_off": {
+        "n": 15,
+        "right": 15
+      },
+      "quieter": {
+        "n": 13,
+        "right": 13
+      },
+      "too_quiet": {
+        "n": 10,
+        "right": 10
+      },
+      "wrong_text": {
+        "n": 20,
+        "right": 20
+      },
+      "skipped_words": {
+        "n": 90,
+        "right": 40
+      }
+    },
+    "by_language": {
+      "es": {
+        "n": 130,
+        "right": 121
+      },
+      "kk": {
+        "n": 130,
+        "right": 96
+      },
+      "ur": {
+        "n": 130,
+        "right": 110
+      }
+    },
+    "errors": [
+      {
+        "id": "es_007.wav",
+        "variant": "heavy_noise",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.225,
+        "detected_lang": "Spanish",
+        "transcript": "Al pasar el tiempo, a medida que la siguiente población se va adaptando al nuevo entorno, el escritor de blogs empieza a asemejarse cada vez menos a la otra pob"
+      },
+      {
+        "id": "es_059.wav",
+        "variant": "clean",
+        "label": "accept",
+        "reasons": [
+          "long silence"
+        ],
+        "cer": 0,
+        "detected_lang": "Spanish",
+        "transcript": "En una unión entre NPWS y la Asociación de Tiradores Deportivos de Australia, NSW Inc., se reclutaron voluntarios idóneos dentro del programa de caza de la Asoc"
+      },
+      {
+        "id": "es_066.wav",
+        "variant": "heavy_noise",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.05154639175257732,
+        "detected_lang": "Spanish",
+        "transcript": "Combinar viaje y aprendizaje se ha vuelto una opción muy popular entre aquellos que planean tomar su medio sabático."
+      },
+      {
+        "id": "kk_036.wav",
+        "variant": "clean",
+        "label": "accept",
+        "reasons": [
+          "long silence"
+        ],
+        "cer": 0.11971830985915492,
+        "detected_lang": "Kazakh",
+        "transcript": "Жаралыңғандыр, ауруқаныға тасымалдыңғаннан кейін айқас тұқтығанды, қалған қамалғандардың ішінен шама мен қырғадам алаңда қалды, және камераларыны оралудан баста"
+      },
+      {
+        "id": "kk_039.wav",
+        "variant": "clean",
+        "label": "accept",
+        "reasons": [
+          "long silence"
+        ],
+        "cer": 0.22388059701492538,
+        "detected_lang": "Kazakh",
+        "transcript": "Бұрынғы палата спикері Ньют Генгрич, Техас губернаторы Рик Пэрри және конгрессмен Мишель Бахмын 8-ші, 4-ші, 5-ші және 6-ші ұрындарды еленді."
+      },
+      {
+        "id": "kk_053.wav",
+        "variant": "heavy_noise",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.1595744680851064,
+        "detected_lang": "Kazakh",
+        "transcript": "Шаяпап, 19-ғы 500 шаршы километр ғамкины және 14-түрі Эко Аймаққа бөлінген. Әрқайсысында әртүрлі жабайы жануарлар тұрады."
+      },
+      {
+        "id": "kk_054.wav",
+        "variant": "heavy_noise",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.096,
+        "detected_lang": "Kazakh",
+        "transcript": "Студенттер сыне көз қарасынен қарайтын аудитория болғандықтан, блог-ауфтеры сыне пікірлерді болдырмау үшін масының сапасын жақсартуға әрекет етеді."
+      },
+      {
+        "id": "kk_061.wav",
+        "variant": "clean",
+        "label": "accept",
+        "reasons": [
+          "long silence"
+        ],
+        "cer": 0.15079365079365079,
+        "detected_lang": "Kazakh",
+        "transcript": "Бұл үштің баспасөз қатшысы Гордон Джондры сол түстік қарияның берген өдесін қария түбіндегі ядралық қаруда жою жолындағы маңызды қадам деп санады."
+      },
+      {
+        "id": "kk_074.wav",
+        "variant": "clean",
+        "label": "accept",
+        "reasons": [
+          "long silence"
+        ],
+        "cer": 0.056962025316455694,
+        "detected_lang": "Kazakh",
+        "transcript": "Бабтарға түзетулер еңгізу алдында барлық штаттардың бір ауыздан келісінің қажететті. Және штаттар орталық үкімет оны шаманызды емес деп қарағаны соныша, олардың"
+      },
+      {
+        "id": "kk_090.wav",
+        "variant": "clean",
+        "label": "accept",
+        "reasons": [
+          "long silence"
+        ],
+        "cer": 0.08620689655172414,
+        "detected_lang": "Kazakh",
+        "transcript": "Көп жағдайларда шетелде степендиалық қорысқа түсіу үш жүзінде еліңізге оралғанда, жоғары оқу орынына түсіу мүмкіндіктеріңізді жақсартады."
+      },
+      {
+        "id": "ur_023.wav",
+        "variant": "mild_noise",
+        "label": "accept",
+        "reasons": [
+          "too noisy"
+        ],
+        "cer": 0.04964539007092199,
+        "detected_lang": "Urdu",
+        "transcript": "ایک بار جب سمجھوتے پر دستخط ہو جائیں تو اسرائیل کا مطالبہ ہے کہ وادی میں اس کا فوجی وجود دس سالوں کے لیے رہنا چاہیے جبکہ فلسطینی آثارٹی فقط پانچ سالوں کے لیے ای"
+      },
+      {
+        "id": "ur_031.wav",
+        "variant": "heavy_noise",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.14814814814814814,
+        "detected_lang": "Urdu",
+        "transcript": "سابق ہاؤس سپیکر نیوٹ کنڈرس ٹیکساس کی گورنر ریکی پیری اور کانگریس وومن مائیکل بینگن نے بلتتی چوتھا پانچوہ اور چھتک مقام حاصل کیا"
+      },
+      {
+        "id": "ur_093.wav",
+        "variant": "heavy_noise",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.20454545454545456,
+        "detected_lang": "Urdu",
+        "transcript": "بردوہ کم مہار کے ساتھ زیادہ دوستان سے دیر گزار سکتے ہیں ہم مہاریاتی تحریک میں شنگل ہو سکتے ہیں اور ہم سرکرم رکھن بن سکتے ہیں تاکہ کسی حد تک مستقبل کی تکلیف کو ک"
+      },
+      {
+        "id": "es_skip_000.wav",
+        "variant": "skipped_words",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.21739130434782608,
+        "detected_lang": "Spanish",
+        "transcript": "Actualmente los científicos sostienen que esta economía masiva del carbono ha privado al contribuido con la evolución de la humanidad por los últimos dos millon"
+      },
+      {
+        "id": "es_skip_006.wav",
+        "variant": "skipped_words",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.19402985074626866,
+        "detected_lang": "Spanish",
+        "transcript": "Algunos ejemplos de posibles actividades en el lugar son caza, pesca, fotografía, parques y estudio de información del ecosistema."
+      },
+      {
+        "id": "es_skip_009.wav",
+        "variant": "skipped_words",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.19886363636363635,
+        "detected_lang": "Spanish",
+        "transcript": "El ganador olímpico de la medalla de oro debía nadar en el estilo libre de los Juegos de la Commonwealth, pero su condición física ha sido puesta en dudas a raí"
+      },
+      {
+        "id": "es_skip_016.wav",
+        "variant": "skipped_words",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.2375,
+        "detected_lang": "Spanish",
+        "transcript": "La gastronomía de Mallorca como la de otras regiones similares es la de la carne, especialmente la porcina, y utiliza aceite de oliva en todas sus recetas."
+      },
+      {
+        "id": "es_skip_019.wav",
+        "variant": "skipped_words",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.24203821656050956,
+        "detected_lang": "Spanish",
+        "transcript": "Tienen muy buena visión nocturna y en lugares oscuros Y además, cazan a sus presas mimetizándose con su entorno y luego se abalanzan sobre ellas"
+      },
+      {
+        "id": "es_skip_021.wav",
+        "variant": "skipped_words",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.22340425531914893,
+        "detected_lang": "Spanish",
+        "transcript": "No se han producido cambios en la población, ni en las mismas adaptaciones que en el pasado."
+      },
+      {
+        "id": "kk_skip_001.wav",
+        "variant": "skipped_words",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.373015873015873,
+        "detected_lang": "Kazakh",
+        "transcript": "Шетелге алғаш рет барғаныңызды адамдар сапайлық және түнай елге бейімделуі керектігін білген."
+      },
+      {
+        "id": "kk_skip_002.wav",
+        "variant": "skipped_words",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.38461538461538464,
+        "detected_lang": "Kazakh",
+        "transcript": "Америка Құрама аштаттарында көптік секлероздың МС шамамен 400 мүмкін секлерде саны ең көп неврологиялық ауру етіп қалдырады."
+      },
+      {
+        "id": "kk_skip_003.wav",
+        "variant": "skipped_words",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.3684210526315789,
+        "detected_lang": "Kazakh",
+        "transcript": "Айтылған бікірлер басқа жерлерде қол жетімді толы қылама және қарапайым болып келеді."
+      },
+      {
+        "id": "kk_skip_004.wav",
+        "variant": "skipped_words",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.3387096774193548,
+        "detected_lang": "Kazakh",
+        "transcript": "Егелгі Қаннанда Қанн, сондықтан ағаш өте қымбат болды."
+      },
+      {
+        "id": "kk_skip_005.wav",
+        "variant": "skipped_words",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.4064516129032258,
+        "detected_lang": "Kazakh",
+        "transcript": "НПВС және Австралияның спорттық атқыштар қаумдастығының аңауылауы бағдарламасы бойынша білікті еректілер жолданды."
+      },
+      {
+        "id": "kk_skip_007.wav",
+        "variant": "skipped_words",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.39416058394160586,
+        "detected_lang": "Kazakh",
+        "transcript": "Жасанды интелект саласындағы зерттеу интелектуалды әрекен дауға арналған машиналар жасауды қамтейді."
+      },
+      {
+        "id": "kk_skip_008.wav",
+        "variant": "skipped_words",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.4418604651162791,
+        "detected_lang": "Kazakh",
+        "transcript": "Сонда яқы бір кенултар ұйма глобалдық жылыну әсер еті қоры туралы соңғы шешім қабылданады деген үмітте."
+      },
+      {
+        "id": "kk_skip_009.wav",
+        "variant": "skipped_words",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.3431952662721893,
+        "detected_lang": "Kazakh",
+        "transcript": "Бұл кеңген қолданылған мен әсіресе римдіктерден басқа адамдар арасында байланысты көбіне балағаттау сөзіретінде қарастырылған."
+      },
+      {
+        "id": "kk_skip_010.wav",
+        "variant": "skipped_words",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.37383177570093457,
+        "detected_lang": "Kazakh",
+        "transcript": "Серттеушілер бұл жас динозаврдың құйырығы болса да, ұның қаварсыны екенін көрсетеді."
+      },
+      {
+        "id": "kk_skip_011.wav",
+        "variant": "skipped_words",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.39416058394160586,
+        "detected_lang": "Kazakh",
+        "transcript": "Әйелдер мәдени айырмашылықтар дәмешілдік бен дәмешілдік деп есептеуі мүмкін нәрсеге қолдан, сұтау, тағы басқасы жиет ездесетін түсінулер керек."
+      },
+      {
+        "id": "kk_skip_012.wav",
+        "variant": "skipped_words",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.19607843137254902,
+        "detected_lang": "Kazakh",
+        "transcript": "Португалдықтар оны бұзды. Және Касабранка деген атпен қабесінші жылғы жер сілкізінісінен кейінғана кетті."
+      },
+      {
+        "id": "kk_skip_013.wav",
+        "variant": "skipped_words",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.32653061224489793,
+        "detected_lang": "Kazakh",
+        "transcript": "Бұл динамикалық көлікте барлығы жеке көліктерді негіз және осы жүйені қолдайды."
+      },
+      {
+        "id": "kk_skip_014.wav",
+        "variant": "skipped_words",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.3258426966292135,
+        "detected_lang": "Kazakh",
+        "transcript": "Жапонияға шамамен 7000 аралы ең үлкені жетінші ең үлкен аралға айналдырады."
+      },
+      {
+        "id": "kk_skip_015.wav",
+        "variant": "skipped_words",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.3870967741935484,
+        "detected_lang": "Kazakh",
+        "transcript": "Негізден курс осы жерде талқыланатын қалқ тәжірбені толығырақ қамтайда."
+      },
+      {
+        "id": "kk_skip_016.wav",
+        "variant": "skipped_words",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.5053763440860215,
+        "detected_lang": "Kazakh",
+        "transcript": "Мысалы, оқыту және әлеметтені интернетті пайтып, Джеймс Эд Ал, 1995."
+      },
+      {
+        "id": "kk_skip_017.wav",
+        "variant": "skipped_words",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.2426470588235294,
+        "detected_lang": "Kazakh",
+        "transcript": "Кейбір ресми қабарларда өлімдер саны сегіздеп көрсетілі жарақаттанғанын растайды, бірақ түпкілікті сандар әлі белгісіз."
+      },
+      {
+        "id": "kk_skip_018.wav",
+        "variant": "skipped_words",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.4076923076923077,
+        "detected_lang": "Kazakh",
+        "transcript": "Субмәденеттің жеке қасиеттері ретінде лингвистикалық факторлардың жүйінтіғы есіп келуі мүмкін."
+      },
+      {
+        "id": "kk_skip_019.wav",
+        "variant": "skipped_words",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.5480769230769231,
+        "detected_lang": "Kazakh",
+        "transcript": "Тимбукту саластырмалы түрде қол жетімсіздігімен дафор ретінде қолданылы бастады. Тимбукту саластырмалы түрде қол жетімсіздігімен"
+      },
+      {
+        "id": "kk_skip_020.wav",
+        "variant": "skipped_words",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.3146853146853147,
+        "detected_lang": "Kazakh",
+        "transcript": "Қазір ғылым бұл массивті көміртек экономикасы сонғы екі миллион жыл бойы біреуінен биосифераны шығарғанын көрсетеді."
+      },
+      {
+        "id": "kk_skip_021.wav",
+        "variant": "skipped_words",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.43795620437956206,
+        "detected_lang": "Kazakh",
+        "transcript": "Келісімге қол қойылғанның соң, Израил алқапта 10 жыл бойы әліуді тек қаны 5 жылға қалдыруға келіседі."
+      },
+      {
+        "id": "kk_skip_022.wav",
+        "variant": "skipped_words",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.2857142857142857,
+        "detected_lang": "Kazakh",
+        "transcript": "Есіптерге сай кеңгінен тарап кеткен тонаушылық түншелерінде құқық қорға орғындарының қызметкерлері болмады."
+      },
+      {
+        "id": "kk_skip_023.wav",
+        "variant": "skipped_words",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.3235294117647059,
+        "detected_lang": "Kazakh",
+        "transcript": "Жаңа патшалық ежелгі мұсырлықтар кен әз ашарларының бескер күштеріне таңырқай қарады."
+      },
+      {
+        "id": "kk_skip_024.wav",
+        "variant": "skipped_words",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.36486486486486486,
+        "detected_lang": "Kazakh",
+        "transcript": "Жәндіктер ауыға шыққан бірінші жануарлар болған, олардың ұшу қабілеті оларға қалыптарды дейін директ табуға көміктесті."
+      },
+      {
+        "id": "kk_skip_025.wav",
+        "variant": "skipped_words",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.38613861386138615,
+        "detected_lang": "Kazakh",
+        "transcript": "Бұрынғы филиппиндік полиция ғын-қон нелады автобустарын орлап барымдада ұстады."
+      },
+      {
+        "id": "kk_skip_026.wav",
+        "variant": "skipped_words",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.46153846153846156,
+        "detected_lang": "Kazakh",
+        "transcript": "Қыста арктикалық немесе көресіз, яғни күн көк жектен көтерілмейді."
+      },
+      {
+        "id": "kk_skip_027.wav",
+        "variant": "skipped_words",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.5483870967741935,
+        "detected_lang": "Kazakh",
+        "transcript": "Сіз ағыннан шыққанды артқолмайды."
+      },
+      {
+        "id": "kk_skip_029.wav",
+        "variant": "skipped_words",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.4375,
+        "detected_lang": "Russian",
+        "transcript": "Молдова, Православие"
+      },
+      {
+        "id": "ur_skip_000.wav",
+        "variant": "skipped_words",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.32727272727272727,
+        "detected_lang": "Urdu",
+        "transcript": "تاہم زیادہ در نشانوں کی طرف صرف تعلانی زبان قانون کے ذریعے پہلی سلکاری زبان کے طور پر تصمیم کی گئی ہے"
+      },
+      {
+        "id": "ur_skip_001.wav",
+        "variant": "skipped_words",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.3442622950819672,
+        "detected_lang": "Hindi",
+        "transcript": "ملک کے مشہور گلوکاروں نے بھجن کی قدموں میں پیش کی ہے"
+      },
+      {
+        "id": "ur_skip_003.wav",
+        "variant": "skipped_words",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.3008849557522124,
+        "detected_lang": "Urdu",
+        "transcript": "نکتے پر اس نے خبردار کیا کہ کوئی بھی گارنٹی نہیں دے سکتا تائیفی جنگ متنامی انف یا عام خلفشار کو روک سکتا ہے"
+      },
+      {
+        "id": "ur_skip_005.wav",
+        "variant": "skipped_words",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.3157894736842105,
+        "detected_lang": "Hindi",
+        "transcript": "اگر آپ موسم سرما میں آرکٹک یا انٹارٹک کے علاقے ربا کریں گے اس کا مطلب ہے کہ سورج افق پر اوپر نہیں اگتا ہے"
+      },
+      {
+        "id": "ur_skip_006.wav",
+        "variant": "skipped_words",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.31645569620253167,
+        "detected_lang": "Urdu",
+        "transcript": "یہ ایک عام طریقہ رواج پا گیا ہے لیکن لوہو کیوں میں زیادہ زبائش کی جانے لگی"
+      },
+      {
+        "id": "ur_skip_008.wav",
+        "variant": "skipped_words",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.1686746987951807,
+        "detected_lang": "Urdu",
+        "transcript": "پولیس کے مطابق گاڑی کے جس جائبر نے فوٹوگرافر کو ٹکر ماری امہ کے الزام کا سامنا نہیں کرے گا"
+      },
+      {
+        "id": "ur_skip_009.wav",
+        "variant": "skipped_words",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.2982456140350877,
+        "detected_lang": "Urdu",
+        "transcript": "عرمان ورسی نے کہا میں نے اپنی بہن اور اس کے دوست کو خودے میں مازور افراد تھے لوگ بس الچلتے ہوئے انہیں دھککہ دے رہے تھے"
+      },
+      {
+        "id": "ur_skip_010.wav",
+        "variant": "skipped_words",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.34951456310679613,
+        "detected_lang": "Hindi",
+        "transcript": "ایران میں ہوای حادثیں عام ہیں جس کے پاس آپریشنز کے لیے بھی اچھی طرح دیکھ بھال نہیں کی جاتی"
+      },
+      {
+        "id": "ur_skip_011.wav",
+        "variant": "skipped_words",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.3148148148148148,
+        "detected_lang": "Hindi",
+        "transcript": "دو گھنٹوں کے درمیان سرگ مزید تین بم دھماکے ہوئے"
+      },
+      {
+        "id": "ur_skip_015.wav",
+        "variant": "skipped_words",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.2727272727272727,
+        "detected_lang": "Urdu",
+        "transcript": "جنگلات صرف مینگرو کے دلدری علاقے نہیں ان میں عظیم جنگلات نے ایک بار گینجٹک میدان کا احاطہ کیا ہوا تھا"
+      },
+      {
+        "id": "ur_skip_016.wav",
+        "variant": "skipped_words",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.2605042016806723,
+        "detected_lang": "Urdu",
+        "transcript": "کچھ رپورٹوں میں سرکاری امواد کی شرح آٹھ بتائی گئی ہے اور سرکاری کی ہے لیکن حتمی آداد و شمار کا ابھی تک علم نہیں ہوا"
+      },
+      {
+        "id": "ur_skip_017.wav",
+        "variant": "skipped_words",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.32954545454545453,
+        "detected_lang": "Urdu",
+        "transcript": "اس ہرکی ٹرانسپورٹ شٹل میں ہر کوئیوں پر مبنی ٹرانسپورٹ نظام کی مدد کر رہا ہے۔"
+      },
+      {
+        "id": "ur_skip_019.wav",
+        "variant": "skipped_words",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.3466666666666667,
+        "detected_lang": "Urdu",
+        "transcript": "پولینڈ کے بسری معذوری والے اسکیر، میشیز، گریزل اور گائیڈ اپنا اور گناسکا نے سپر جی میں، سیورک پارک نے منز سٹیننگ سپر جی میں چوبیس میں پوزیشن لی۔"
+      },
+      {
+        "id": "ur_skip_020.wav",
+        "variant": "skipped_words",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.30303030303030304,
+        "detected_lang": "Urdu",
+        "transcript": "فیلپائن پر فتح میں امریکی سامرود فیلپینو افراد نے ادا کیے تھے"
+      },
+      {
+        "id": "ur_skip_027.wav",
+        "variant": "skipped_words",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.2897196261682243,
+        "detected_lang": "Urdu",
+        "transcript": "بہت سے معاملوں میں برون ملف میں گیپ سال والے کورس میں اندراتی سالہ تعلیم میں داخل کے موقع پر بڑھ جاتے ہیں"
+      },
+      {
+        "id": "ur_skip_028.wav",
+        "variant": "skipped_words",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.28,
+        "detected_lang": "Urdu",
+        "transcript": "بری آزم سے دور فاصلے پر ہونے کی وجہ سے ممالی جسیم کچھوہ گیلپا گوز مین بنیادی چڑھنے والا جانور بن گیا"
+      },
+      {
+        "id": "ur_skip_029.wav",
+        "variant": "skipped_words",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.2524271844660194,
+        "detected_lang": "Hindi",
+        "transcript": "یہ نظریات تجویز دیتے ہیں کہ لوگوں کی مقصودی ہیں جو اندر پائے جاتی ہیں جب وہ بلوگت کی جانب قدم رکھتے ہیں"
+      }
+    ]
+  },
+  "thresholds": "frozen (eval/results/results.json); server copy in app/supabase/functions/qc-check/qc.ts"
+}

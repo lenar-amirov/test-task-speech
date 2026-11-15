@@ -13,6 +13,7 @@ import requests
 URL = "https://cpsdihiwdbaccxoowzht.supabase.co/functions/v1/qc-eval"
 KEY = os.environ["SUPABASE_ANON_KEY"]   # the public key, same one the demo page ships
 PACE_S = float(os.environ.get("PACE_S", "4"))
+SPLITS = os.environ.get("SPLITS", "fresh,hard").split(",")   # dev = the tuning set (dev_set.py)
 
 
 def wilson(k, n, z=1.96):
@@ -39,6 +40,8 @@ def check(item, path):
                           files={"audio": ("rec.wav", wav_bytes(path), "audio/wav")}, timeout=120)
         if r.status_code == 200:
             return r.json()
+        if r.status_code == 403 and attempt < 2:   # a warm function may still hold the old allowlist
+            time.sleep(30); continue
         if r.status_code in (429, 500, 502, 503, 504, 546):
             wait = min(120, 10 * 2 ** attempt)
             print(f"  {item['id']}: {r.status_code} {r.text[:120]}; retry in {wait}s", flush=True)
@@ -85,7 +88,7 @@ def main(data, out_jsonl, summary):
         for line in open(out_jsonl, encoding="utf-8"):
             r = json.loads(line); done[(r["split_set"], r["id"])] = r
     with open(out_jsonl, "a", encoding="utf-8") as f:
-        for split in ("fresh", "hard"):
+        for split in SPLITS:
             items = list(csv.DictReader(open(os.path.join(data, split, "manifest.csv"), encoding="utf-8")))
             for i, it in enumerate(items):
                 if (split, it["id"]) in done:

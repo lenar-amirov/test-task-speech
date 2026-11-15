@@ -6,9 +6,10 @@ The check that decides whether a read-speech recording is good enough to pay for
 before any human looks at it. Built for the inDrive DataTasks Staff PM home task (the Build question).
 
 **Measured result (the live server):** on 300 real recordings the tuning never saw, 95% of bad recordings caught
-(143/150, 95% CI 91–98%) and 2% of good ones wrongly rejected (3/150, CI 0.7–5.7%). Targets were ≥90% and ≤5%;
-the false-reject upper bound is above 5%, so a larger test is next. Thresholds were frozen before any check ran.
-FLEURS Spanish, Kazakh and Urdu. Known gap: skipping a quarter of the sentence is caught only 38% of the time.
+(143/150, 95% CI 91–98%) and 4% of good ones wrongly rejected (6/150, CI 1.9–8.5%). Targets were ≥90% and ≤5%;
+the false-reject upper bound is above 5%, so a larger test is next. Thresholds were frozen before any check ran
+(text limits tuned on a separate FLEURS dev-split set for the deployed Whisper large-v3). FLEURS Spanish, Kazakh and Urdu.
+Skipping a quarter of the sentence is caught 92% of the time. Weak spot: Kazakh, 4 of 49 good recordings rejected.
 Details: [`eval/README.md`](eval/README.md).
 
 ## Try it
@@ -45,4 +46,4 @@ and accepted recordings are packed into buyer batches that must stay under the b
 
 - Measured on planted defects in real recordings, not on real buyer decisions.
 - FLEURS is read in quiet rooms; car noise, phone microphones and spontaneous speech will be harder.
-- The text limits were first tuned on Whisper small; they are being re-tuned on the deployed Whisper large-v3 (dev split of FLEURS, kept apart from the measured sets).
+- Text limits were re-tuned once for the deployed Whisper large-v3 (they had been set on Whisper small). The trade: skipped words caught 23/60 → 55/60, good recordings wrongly rejected 3/150 → 6/150. Both runs are kept in `eval/results/`.

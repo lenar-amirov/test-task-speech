@@ -254,7 +254,7 @@
     <section class="hero" aria-labelledby="h1">
       <h1 id="h1">Is this recording good enough to pay for?</h1>
       <p class="lead">Drivers and passengers read a sentence into their phone for a few tenge. Before we pay and ship it to a buyer, this check answers: accept, or re-record with a reason.</p>
-      <p class="lead result-line">On 300 recordings it had never seen, this server caught <b>143 of 150 bad ones (95%)</b> and wrongly rejected <b>3 of 150 good ones (2%)</b>.</p>
+      <p class="lead result-line">On 300 recordings it had never seen, this server caught <b>143 of 150 bad ones (95%)</b> and wrongly rejected <b>6 of 150 good ones (4%)</b>.</p>
     </section>
 
     <section class="try" aria-labelledby="try">
@@ -364,8 +364,9 @@
       <div>
         <h2 id="limits">What this does not prove yet</h2>
         <ul class="limits">
-          <li>The 95% and 2% come from defects planted in real recordings, so the right answer is known. Real buyer decisions are the next test.</li>
-          <li>Subtle cheating is harder. Skipping a quarter of the sentence was caught only 23 times in 60 (38%); a person listening to borderline cases would raise that to 35 in 60. Reading a Kazakh sentence in Russian (40 of 40) and light clipping (60 of 60) were all caught. A word-by-word check is the next fix.</li>
+          <li>The 95% and 4% come from defects planted in real recordings, so the right answer is known. Real buyer decisions are the next test.</li>
+          <li>Subtle cheating: skipping a quarter of the sentence is caught 55 times in 60 (92%), and a person listening to borderline cases raises that to 59. Reading a Kazakh sentence in Russian (40 of 40) and light clipping (60 of 60) were all caught.</li>
+          <li>Kazakh is the weak language: 4 of 49 good Kazakh recordings were rejected (8%), two of them for a pause at the end just over the 4-second limit. Trimming trailing silence before the check is the next fix.</li>
           <li>FLEURS is read in quiet rooms. A car, a cheap microphone and free speech will be harder. The free conversation task here runs on demo rules that have not been measured yet.</li>
           <li>Fraud: the same file sent twice is caught. Replaying someone else's recording, text-to-speech and two accounts sharing one voice are not caught yet; they need speaker and synthetic-voice checks.</li>
         </ul>
@@ -376,7 +377,7 @@
       </div>
     </section>
 
-    <footer><p>Targets were ≥90% caught and ≤5% wrongly rejected. With 95% confidence the true rates are 91–98% and 0.7–5.7%, so the upper end can still miss the 5% target; a larger test settles it. Recordings: FLEURS Spanish, Kazakh, Urdu.</p>
+    <footer><p>Targets were ≥90% caught and ≤5% wrongly rejected. With 95% confidence the true rates are 91–98% and 1.9–8.5%, so the 5% target is not proven yet; about 2,000 good recordings would settle it. Text limits were tuned on a separate set from the FLEURS dev split and frozen before this test. Recordings: FLEURS Spanish, Kazakh, Urdu.</p>
       <p>Prototype built for the DataTasks product case. Not an inDrive product. Recordings for the test set: Google FLEURS, CC BY 4.0.</p></footer>
   </div>
 </main>
@@ -418,7 +419,7 @@ const PROMPTS = {
        "شام کو بارش ہو تو ہم عام طور پر ٹیکسی منگواتے ہیں۔"],
 };
 const MEASURED = { es: true, kk: true, ur: true };
-const CER_LIMIT = { en: 0.25, ru: 0.25, es: 0.25, kk: 0.55, ur: 0.35 };
+const CER_LIMIT = { en: 0.25, ru: 0.25, es: 0.15, kk: 0.25, ur: 0.25 };
 const LANG_LABEL = { en: 'English', ru: 'Russian', es: 'Spanish', kk: 'Kazakh', ur: 'Urdu' };
 const OTHER = { en: "My favourite season is autumn, because the city is quiet.", ru: "Мне больше всего нравится осень, потому что в городе тихо.",
   es: "Mi estación favorita es el otoño, porque la ciudad está tranquila.", kk: "Маған күз мезгілі ұнайды, өйткені қала тыныш болады.",
@@ -475,7 +476,7 @@ function renderPicker() {
   $('scenarios').innerHTML = scenList().map(s => `<button type="button" class="chip" data-s="${s.id}" aria-pressed="${!sample && s.id === scen}">${esc(s.label)}</button>`).join('');
   $('prompt').textContent = prompt();
   $('prompt').lang = lang; $('prompt').dir = lang === 'ur' ? 'rtl' : 'ltr';
-  $('langnote').textContent = free ? 'Free conversation runs on demo rules that have not been measured yet.' : MEASURED[lang] ? `${LANG_LABEL[lang]} is one of the three languages the 95% and 2% were measured on.` : `${LANG_LABEL[lang]} is here so you can try it; it was not part of the measured test.`;
+  $('langnote').textContent = free ? 'Free conversation runs on demo rules that have not been measured yet.' : MEASURED[lang] ? `${LANG_LABEL[lang]} is one of the three languages the 95% and 4% were measured on.` : `${LANG_LABEL[lang]} is here so you can try it; it was not part of the measured test.`;
   const s = findScen(scen);
   $('howto').innerHTML = `<strong>Should get: ${s.expect === 'accept' ? 'accept' : 're-record'}.</strong> ${sample ? 'A real recording from the test set; the sentence on the right is what the speaker was asked to read.' : s.html ? s.how(lang) : esc(s.how(lang))}`;
 }

@@ -1,20 +1,25 @@
 # How the speech auto-QC was measured
 
 **The live server, measured on a fresh set the tuning never saw: 95% of bad recordings caught (143/150),
-2% of good ones wrongly rejected (3/150).** Targets were ≥90% and ≤5%. Thresholds were frozen before any of this ran.
+4% of good ones wrongly rejected (6/150).** Targets were ≥90% and ≤5%. Thresholds were frozen before any of this ran.
 
 | Fresh set, 300 recordings | Caught (bad → re-record) | Wrongly rejected (good → re-record) |
 |---|---|---|
-| **Live server: Whisper large-v3 (Groq) + server rules** | **95% (143/150), 95% CI 91–98%** | **2% (3/150), 95% CI 0.7–5.7%** |
+| **Live server: Whisper large-v3 (Groq), text limits tuned for it** | **95% (143/150), 95% CI 91–98%** | **4% (6/150), 95% CI 1.9–8.5%** |
+| Live server with the old text limits (set on Whisper small) | 95% (143/150), CI 91–98% | 2% (3/150), CI 0.7–5.7% |
 | Prototype: Whisper small + language-probability check | 97% (145/150), CI 92–99% | 2% (3/150), CI 0.7–5.7% |
 | Phone checks only | 51% | 1% |
 
-The upper end of the false-reject interval (5.7%) is above the 5% target: 150 good recordings cannot prove ≤5%.
-At the same 2% rate, about 250 good recordings put the upper bound under 5% (4.6%); 400 give 3.9%. That is the next test.
+The upper end of the false-reject interval (8.5%) is above the 5% target: 150 good recordings cannot prove ≤5%.
+At a 4% rate it takes about 2,000 good recordings to put the upper bound under 5%; at 3%, about 500. That is the next test,
+and trimming trailing silence (below) should bring the rate down first.
 
-By language (live server, share judged right): Spanish 97%, Kazakh 93%, Urdu 100%.
-Weakest case: heavy noise, 18 of 25 caught (72%). Large-v3 hears through the noise, so the words still match; whether a
-buyer would reject these is itself a question for the human-label test. Batches of 100 with 10% bad submitted: 42% break
+By language (live server, share judged right): Spanish 96%, Kazakh 92%, Urdu 99%. Good recordings wrongly rejected:
+Spanish 1/51, Urdu 1/50, Kazakh 4/49 (8%). Two of the Kazakh four are a trailing pause of about 4.2 s against the 4 s
+limit; two are text (Whisper's Kazakh is weak). Trimming trailing silence before the check is the next fix.
+Weakest defect: heavy noise, 18 of 25 caught (72%). The words still come through and the server's noise estimate reads
+too high on babble noise (it measures 3–17 dB where 4 dB or less was planted), so the noise rule misses them; whether
+a buyer would reject these is itself a question for the human-label test. Batches of 100 with 10% bad submitted: 43% break
 the buyer's 10% rule without the check, 0% with it; bad share in what ships 0.5%.
 
 ## Harder defects (live server, frozen thresholds)
@@ -25,14 +30,19 @@ the buyer's 10% rule without the check, 0% with it; bad share in what ships 0.5%
 |---|---|---|
 | Kazakh sentence read in Russian (same sentence, another speaker) | 40/40 | all as "wrong language" |
 | Light clipping, 0.2–1% of samples | 60/60 | |
-| 20–30% of the sentence skipped in the middle | **23/60 (38%)** | Spanish 13/20, Urdu 9/20, Kazakh 1/20 |
+| 20–30% of the sentence skipped in the middle | **55/60 (92%)** | was 23/60 with the old text limits; 4 of the 5 misses get the borderline flag |
 
-Skipped words are the real gap. One character-error limit per language cannot tell "skipped a quarter of the
-sentence" from "a recogniser that struggles with the language": Kazakh's limit is 0.55 because Whisper's Kazakh is
-weak, and that same slack lets skipped words through. 21 of the 60 land within ±0.05 of the limit and get the borderline
-flag; a person listening to those would raise the catch to 35/60. The fix is a word-level alignment check (flag any run of
-missing words longer than ~15% of the sentence), tuned on a build set and re-checked on a fresh one. Not done here,
-because changing the rules after seeing these results would break the frozen-threshold discipline.
+Skipped words were the real gap with the old text limits (23/60). Those limits were set on Whisper small, whose
+Kazakh is weak, so Kazakh's limit was 0.55 and that slack let skipped words through (Kazakh 1/20). On the deployed
+large-v3 good readings sit much lower, so the text limits were re-tuned once: `dev_set.py` builds 390 recordings from
+the FLEURS dev split (no recording shared with the fresh or hard sets, 30 per language with skipped words), they run
+through `qc-eval` (`results/dev_rows.jsonl`), and `tune_text.py` picks per language the lowest limit that wrongly rejects
+at most 2% of good dev recordings for their text: Spanish 0.15, Kazakh 0.25, Urdu 0.25 (`results/text_limits.json`).
+Frozen, then the fresh and hard sets were run once. Now skipped words are caught 55/60 (Spanish 20/20, Kazakh 18/20,
+Urdu 17/20); with a person on borderline cases, 59/60. The price is 3 more good recordings rejected on the fresh set
+(6/150 instead of 3/150). The old run is kept: `results/server_rows_whisper_small_limits.jsonl`.
+A word-level alignment check (flag any run of missing words longer than ~15% of the sentence) would catch skips
+without tightening the whole-sentence limit; that is the next step.
 
 How the live server was measured: `server_eval.py` sends every recording to the `qc-eval` edge function, which runs
 the same code as the live `qc-check` (shared `qc.ts` and `asr.ts`) but stores nothing and accepts only the eval

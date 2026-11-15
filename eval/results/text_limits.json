@@ -1,0 +1,323 @@
+{
+  "es": {
+    "max_cer": 0.15,
+    "allowed_good_text_rejects": 1,
+    "grid": [
+      {
+        "limit": 0.1,
+        "good_text_rejects": 2,
+        "good": 58,
+        "bad_caught": 71,
+        "bad": 72,
+        "skipped_caught": 30,
+        "skipped": 30
+      },
+      {
+        "limit": 0.15,
+        "good_text_rejects": 0,
+        "good": 58,
+        "bad_caught": 71,
+        "bad": 72,
+        "skipped_caught": 30,
+        "skipped": 30
+      },
+      {
+        "limit": 0.2,
+        "good_text_rejects": 0,
+        "good": 58,
+        "bad_caught": 69,
+        "bad": 72,
+        "skipped_caught": 28,
+        "skipped": 30
+      },
+      {
+        "limit": 0.25,
+        "good_text_rejects": 0,
+        "good": 58,
+        "bad_caught": 64,
+        "bad": 72,
+        "skipped_caught": 24,
+        "skipped": 30
+      },
+      {
+        "limit": 0.3,
+        "good_text_rejects": 0,
+        "good": 58,
+        "bad_caught": 56,
+        "bad": 72,
+        "skipped_caught": 16,
+        "skipped": 30
+      },
+      {
+        "limit": 0.35,
+        "good_text_rejects": 0,
+        "good": 58,
+        "bad_caught": 52,
+        "bad": 72,
+        "skipped_caught": 12,
+        "skipped": 30
+      },
+      {
+        "limit": 0.4,
+        "good_text_rejects": 0,
+        "good": 58,
+        "bad_caught": 42,
+        "bad": 72,
+        "skipped_caught": 2,
+        "skipped": 30
+      },
+      {
+        "limit": 0.45,
+        "good_text_rejects": 0,
+        "good": 58,
+        "bad_caught": 40,
+        "bad": 72,
+        "skipped_caught": 0,
+        "skipped": 30
+      },
+      {
+        "limit": 0.5,
+        "good_text_rejects": 0,
+        "good": 58,
+        "bad_caught": 40,
+        "bad": 72,
+        "skipped_caught": 0,
+        "skipped": 30
+      },
+      {
+        "limit": 0.55,
+        "good_text_rejects": 0,
+        "good": 58,
+        "bad_caught": 40,
+        "bad": 72,
+        "skipped_caught": 0,
+        "skipped": 30
+      },
+      {
+        "limit": 0.6,
+        "good_text_rejects": 0,
+        "good": 58,
+        "bad_caught": 40,
+        "bad": 72,
+        "skipped_caught": 0,
+        "skipped": 30
+      }
+    ],
+    "good_cer_p50": 0.008928571428571428,
+    "good_cer_max": 0.1414141414141414
+  },
+  "kk": {
+    "max_cer": 0.25,
+    "allowed_good_text_rejects": 1,
+    "grid": [
+      {
+        "limit": 0.1,
+        "good_text_rejects": 17,
+        "good": 59,
+        "bad_caught": 70,
+        "bad": 71,
+        "skipped_caught": 30,
+        "skipped": 30
+      },
+      {
+        "limit": 0.15,
+        "good_text_rejects": 6,
+        "good": 59,
+        "bad_caught": 70,
+        "bad": 71,
+        "skipped_caught": 30,
+        "skipped": 30
+      },
+      {
+        "limit": 0.2,
+        "good_text_rejects": 2,
+        "good": 59,
+        "bad_caught": 68,
+        "bad": 71,
+        "skipped_caught": 29,
+        "skipped": 30
+      },
+      {
+        "limit": 0.25,
+        "good_text_rejects": 0,
+        "good": 59,
+        "bad_caught": 67,
+        "bad": 71,
+        "skipped_caught": 28,
+        "skipped": 30
+      },
+      {
+        "limit": 0.3,
+        "good_text_rejects": 0,
+        "good": 59,
+        "bad_caught": 66,
+        "bad": 71,
+        "skipped_caught": 27,
+        "skipped": 30
+      },
+      {
+        "limit": 0.35,
+        "good_text_rejects": 0,
+        "good": 59,
+        "bad_caught": 60,
+        "bad": 71,
+        "skipped_caught": 21,
+        "skipped": 30
+      },
+      {
+        "limit": 0.4,
+        "good_text_rejects": 0,
+        "good": 59,
+        "bad_caught": 51,
+        "bad": 71,
+        "skipped_caught": 11,
+        "skipped": 30
+      },
+      {
+        "limit": 0.45,
+        "good_text_rejects": 0,
+        "good": 59,
+        "bad_caught": 46,
+        "bad": 71,
+        "skipped_caught": 6,
+        "skipped": 30
+      },
+      {
+        "limit": 0.5,
+        "good_text_rejects": 0,
+        "good": 59,
+        "bad_caught": 45,
+        "bad": 71,
+        "skipped_caught": 5,
+        "skipped": 30
+      },
+      {
+        "limit": 0.55,
+        "good_text_rejects": 0,
+        "good": 59,
+        "bad_caught": 42,
+        "bad": 71,
+        "skipped_caught": 2,
+        "skipped": 30
+      },
+      {
+        "limit": 0.6,
+        "good_text_rejects": 0,
+        "good": 59,
+        "bad_caught": 42,
+        "bad": 71,
+        "skipped_caught": 2,
+        "skipped": 30
+      }
+    ],
+    "good_cer_p50": 0.06976744186046512,
+    "good_cer_max": 0.24242424242424243
+  },
+  "ur": {
+    "max_cer": 0.25,
+    "allowed_good_text_rejects": 1,
+    "grid": [
+      {
+        "limit": 0.1,
+        "good_text_rejects": 15,
+        "good": 54,
+        "bad_caught": 76,
+        "bad": 76,
+        "skipped_caught": 30,
+        "skipped": 30
+      },
+      {
+        "limit": 0.15,
+        "good_text_rejects": 7,
+        "good": 54,
+        "bad_caught": 75,
+        "bad": 76,
+        "skipped_caught": 30,
+        "skipped": 30
+      },
+      {
+        "limit": 0.2,
+        "good_text_rejects": 3,
+        "good": 54,
+        "bad_caught": 74,
+        "bad": 76,
+        "skipped_caught": 29,
+        "skipped": 30
+      },
+      {
+        "limit": 0.25,
+        "good_text_rejects": 1,
+        "good": 54,
+        "bad_caught": 73,
+        "bad": 76,
+        "skipped_caught": 29,
+        "skipped": 30
+      },
+      {
+        "limit": 0.3,
+        "good_text_rejects": 0,
+        "good": 54,
+        "bad_caught": 67,
+        "bad": 76,
+        "skipped_caught": 23,
+        "skipped": 30
+      },
+      {
+        "limit": 0.35,
+        "good_text_rejects": 0,
+        "good": 54,
+        "bad_caught": 57,
+        "bad": 76,
+        "skipped_caught": 13,
+        "skipped": 30
+      },
+      {
+        "limit": 0.4,
+        "good_text_rejects": 0,
+        "good": 54,
+        "bad_caught": 52,
+        "bad": 76,
+        "skipped_caught": 6,
+        "skipped": 30
+      },
+      {
+        "limit": 0.45,
+        "good_text_rejects": 0,
+        "good": 54,
+        "bad_caught": 49,
+        "bad": 76,
+        "skipped_caught": 3,
+        "skipped": 30
+      },
+      {
+        "limit": 0.5,
+        "good_text_rejects": 0,
+        "good": 54,
+        "bad_caught": 47,
+        "bad": 76,
+        "skipped_caught": 1,
+        "skipped": 30
+      },
+      {
+        "limit": 0.55,
+        "good_text_rejects": 0,
+        "good": 54,
+        "bad_caught": 46,
+        "bad": 76,
+        "skipped_caught": 0,
+        "skipped": 30
+      },
+      {
+        "limit": 0.6,
+        "good_text_rejects": 0,
+        "good": 54,
+        "bad_caught": 46,
+        "bad": 76,
+        "skipped_caught": 0,
+        "skipped": 30
+      }
+    ],
+    "good_cer_p50": 0.05405405405405406,
+    "good_cer_max": 0.2619047619047619
+  }
+}

@@ -82,7 +82,7 @@
   .sub { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
   .upload { font: 600 14px var(--font); color: var(--ink); cursor: pointer; text-decoration: underline; text-decoration-color: var(--lime-deep); text-decoration-thickness: 2px; text-underline-offset: 3px; min-height: 44px; display: inline-flex; align-items: center; }
 
-  .verdict-col { display: flex; flex-direction: column; gap: 14px; }
+  .verdict-col { scroll-margin-top: 16px; display: flex; flex-direction: column; gap: 14px; }
   .card { border: 1px solid var(--line); border-radius: var(--r-card); padding: 20px; background: var(--sheet); }
   .card.server { background: var(--ink); color: #fff; border-color: var(--ink); }
   .card.server .muted { color: #b9b9b9; }
@@ -99,7 +99,7 @@
   .heard i { font-style: normal; font-weight: 700; }
   .facts { margin-top: 14px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
   .facts div { background: rgba(255,255,255,.08); border-radius: 14px; padding: 10px 12px; }
-  .facts b { display: block; font-size: 20px; font-weight: 800; }
+  .facts b { display: block; font-size: 20px; font-weight: 800; white-space: nowrap; }
   .facts span { font-size: 12px; color: #b9b9b9; }
   .match { margin-top: 12px; font-size: 13.5px; display: flex; gap: 8px; align-items: flex-start; }
   .match svg { width: 16px; height: 16px; flex: none; margin-top: 2px; }
@@ -142,6 +142,17 @@
     section { padding: 32px 0; }
     .hero { padding-top: 28px; }
     :root { --r-sheet: 28px; }
+    .hero p.lead { font-size: 16px; }
+    .facts b { font-size: 17px; }
+    #feedtbl { min-width: 0; }
+    #feedtbl tr:first-child { display: none; }
+    #feedtbl tr { display: grid; grid-template-columns: auto 1fr auto; gap: 2px 10px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+    #feedtbl td { border: 0; padding: 0; }
+    #feedtbl td:nth-child(3) { grid-column: 1 / 3; grid-row: 2; font-weight: 600; }
+    #feedtbl td:nth-child(4) { grid-column: 3; grid-row: 1 / 3; text-align: right; }
+    #feedtbl td:nth-child(5) { grid-column: 1 / -1; color: var(--ink-2); }
+    #feedtbl td:nth-child(5):empty { display: none; }
+    #feedtbl td[colspan] { grid-column: 1 / -1; }
   }
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 </style>
@@ -179,6 +190,7 @@
           <div class="task-head">
             <div class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></div>
             <div><h3>Read the text aloud</h3><p class="small muted">About 10 seconds</p></div>
+            <span class="pay num">75 ₸</span>
           </div>
           <div class="chips" id="scenarios" role="group" aria-label="What to try"></div>
           <div class="prompt-box">
@@ -369,12 +381,14 @@ async function handle(buf) {
   node('phone', phone.accept ? 'done' : 'fail', Math.round(performance.now() - t));
   const wav = wavFrom(x), url = URL.createObjectURL(wav);
   const s = SCENARIOS.find(s => s.id === scen);
+  const showOut = () => { const r = out.getBoundingClientRect(); if (r.top > innerHeight * 0.6 || r.bottom < 0) out.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }); };
   out.innerHTML = `<div class="card server" id="srv"><h3>Server verdict <small>${esc(s.label)}</small></h3><p class="muted" style="margin-top:8px">Listening…</p></div>
     <div class="card"><h3>Phone checks <small>instant</small></h3>
       <div class="vline">${badge(phone.accept)} <span>${esc(reasonText(phone.reasons))}</span></div>
       ${phone.accept ? '' : '<p class="note-box">In the app the contributor re-records now and nothing is uploaded. Here it goes to the server anyway, so you can see that side.</p>'}
       ${sigTable(sig)}
       <audio controls src="${url}"></audio></div>`;
+  showOut();
   if (!CFG.supabaseUrl || !CFG.anonKey) { $('srv').innerHTML = '<h3>Server verdict</h3><p class="muted" style="margin-top:8px">No server on this copy of the page; only the phone checks ran.</p>'; return; }
 
   node('upload', 'active');

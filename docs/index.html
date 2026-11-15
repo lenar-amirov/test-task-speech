@@ -312,7 +312,7 @@
             <label class="upload">Upload a file instead<input type="file" id="file" accept="audio/*" hidden></label>
             <span class="small muted" id="paynote"></span>
           </div>
-          <p class="small muted consent">By recording or uploading you agree that the audio is stored for this demo, transcribed by Groq, and deleted after 30 days. Don't say names, numbers or anything personal.</p>
+          <p class="small muted consent">By recording or uploading you agree that the audio is stored for this demo, transcribed by Groq, and the audio is deleted after 30 days (the transcript and verdict stay in the demo log). Don't say names, numbers or anything personal.</p>
           <div class="samplebar">
             <p><b>No microphone?</b> Check one of our recordings instead: real speakers whose recordings were not used for tuning.</p>
             <div class="chips" id="samples" role="group" aria-label="Sample recordings"></div>
@@ -334,7 +334,7 @@
 
         <div class="wire" aria-hidden="true"><span>WAV + the sentence shown</span></div>
 
-        <p class="lane lane-srv">On the server <span>about $0.15 per accepted hour</span></p>
+        <p class="lane lane-srv">On the server <span>about $0.19 per accepted hour</span></p>
         <div class="step s4" id="n-signal"><i>4</i><b>Check again</b><span class="d">same rules, never trust the phone</span><span class="ms"></span>
           <span class="side" id="n-storage">Audio kept privately<span class="ms"></span></span></div>
         <div class="step s5" id="n-asr"><i>5</i><b>Listen</b><span class="d">Whisper: which language, which words</span><span class="ms"></span></div>
@@ -394,7 +394,7 @@
       </div>
     </section>
 
-    <footer><p>Targets were ≥90% caught and ≤5% wrongly rejected. With 95% confidence the true rates are 91–98% and 1.9–8.5%, so the 5% target is not proven yet; about 2,000 good recordings would settle it. Text limits were tuned on a separate set from the FLEURS dev split and frozen before this test. Recordings: FLEURS Spanish, Kazakh, Urdu.</p>
+    <footer><p>Targets were ≥90% caught and ≤5% wrongly rejected. With 95% confidence the true rates are 91–98% and 1.9–8.5%, so the 5% target is not proven yet; about 2,000 good recordings would settle it. Signal limits were frozen before any test. Text limits were re-tuned once for the deployed model on a separate set (FLEURS dev split) after a first run on this test, then frozen; both runs are published in the repository. Recordings: FLEURS Spanish, Kazakh, Urdu.</p>
       <p>Prototype built for the DataTasks product case. Not an inDrive product. Recordings for the test set: Google FLEURS, CC BY 4.0.</p></footer>
   </div>
 </main>
@@ -680,7 +680,7 @@ function appeal(origId, wav, firstForm) {
       ${note ? `<p class="appeal-note">${note}</p>` : ''}
       ${left > 0
         ? `<p class="appeal-q">Think the check got it wrong?</p><button type="button" class="pill" id="recheck">Check again</button>`
-        : `<p class="appeal-q">Still sure you read it right?</p><button type="button" class="pill" id="dispute">Send it to a person</button><p class="small muted">A person listens within a day. If they accept it, you are paid as usual.</p>`}
+        : `<p class="appeal-q">Still sure you read it right?</p><button type="button" class="pill" id="dispute">Send it to a person</button><p class="small muted">In the app a person listens within a day, and if they accept it you are paid as usual. Here the request is logged for review.</p>`}
     </div>`;
     const rb = $('recheck'), db = $('dispute');
     if (rb) rb.onclick = async () => {

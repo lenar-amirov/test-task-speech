@@ -5,9 +5,11 @@ Live demo: **https://lenar-amirov.github.io/test-task-speech/**
 The check that decides whether a read-speech recording is good enough to pay for and ship to a buyer,
 before any human looks at it. Built for the inDrive DataTasks Staff PM home task (the Build question).
 
-**Measured result:** on 300 real recordings the tuning never saw, 97% of bad recordings caught (145/150) and
-2% of good ones wrongly rejected (3/150). Targets were ≥90% and ≤5%. Thresholds were frozen before that check ran.
-FLEURS Spanish, Kazakh and Urdu, Whisper small. Details: [`eval/README.md`](eval/README.md).
+**Measured result (the live server):** on 300 real recordings the tuning never saw, 95% of bad recordings caught
+(143/150, 95% CI 91–98%) and 2% of good ones wrongly rejected (3/150, CI 0.7–5.7%). Targets were ≥90% and ≤5%;
+the false-reject upper bound is above 5%, so a larger test is next. Thresholds were frozen before any check ran.
+FLEURS Spanish, Kazakh and Urdu. Known gap: skipping a quarter of the sentence is caught only 38% of the time.
+Details: [`eval/README.md`](eval/README.md).
 
 ## Try it
 
@@ -35,7 +37,7 @@ and accepted recordings are packed into buyer batches that must stay under the b
 | Folder | What |
 |---|---|
 | `docs/` | The web page (GitHub Pages) and the browser port of the phone checks |
-| `supabase/` | Edge function `qc-check` and the SQL migrations |
+| `supabase/` | Edge functions `qc-check` (live) and `qc-eval` (measurement, same code) and the SQL migrations |
 | `prototype/` | The original Python checks and CLI (`prototype/README.md`) |
 | `eval/` | How it was measured: data build, tuning, fresh-set check, results |
 

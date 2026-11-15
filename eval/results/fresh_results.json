@@ -1,0 +1,196 @@
+{
+  "n": 300,
+  "thresholds": {
+    "min_speech_ratio": 0.35,
+    "chars_per_s": 14.0,
+    "max_clip_ratio": 0.001,
+    "min_speech_dbfs": -42.0,
+    "min_snr_db": 10,
+    "max_edge_silence_s": 4.0,
+    "max_gap_s": 3.0,
+    "min_lang_prob": {
+      "es": 0.2,
+      "kk": 0.0,
+      "ur": 0.05
+    },
+    "max_cer": {
+      "es": 0.25,
+      "kk": 0.55,
+      "ur": 0.35
+    }
+  },
+  "full": {
+    "tp": 145,
+    "fn": 5,
+    "fp": 3,
+    "tn": 147,
+    "recall": 0.9666666666666667,
+    "false_reject_rate": 0.02,
+    "precision": 0.9797297297297297
+  },
+  "signal_only": {
+    "tp": 77,
+    "fn": 73,
+    "fp": 2,
+    "tn": 148,
+    "recall": 0.5133333333333333,
+    "false_reject_rate": 0.013333333333333334,
+    "precision": 0.9746835443037974
+  },
+  "by_variant": {
+    "clean": {
+      "correct": 106,
+      "n": 107,
+      "share": 0.991
+    },
+    "clipping": {
+      "correct": 25,
+      "n": 25,
+      "share": 1.0
+    },
+    "cut_off": {
+      "correct": 24,
+      "n": 24,
+      "share": 1.0
+    },
+    "heavy_noise": {
+      "correct": 20,
+      "n": 25,
+      "share": 0.8
+    },
+    "long_silence": {
+      "correct": 2,
+      "n": 2,
+      "share": 1.0
+    },
+    "mild_noise": {
+      "correct": 28,
+      "n": 29,
+      "share": 0.966
+    },
+    "quieter": {
+      "correct": 13,
+      "n": 14,
+      "share": 0.929
+    },
+    "too_quiet": {
+      "correct": 15,
+      "n": 15,
+      "share": 1.0
+    },
+    "wrong_language": {
+      "correct": 25,
+      "n": 25,
+      "share": 1.0
+    },
+    "wrong_text": {
+      "correct": 34,
+      "n": 34,
+      "share": 1.0
+    }
+  },
+  "by_language": {
+    "es": {
+      "correct": 98,
+      "n": 100,
+      "share": 0.98
+    },
+    "kk": {
+      "correct": 95,
+      "n": 100,
+      "share": 0.95
+    },
+    "ur": {
+      "correct": 99,
+      "n": 100,
+      "share": 0.99
+    }
+  },
+  "batch_simulation": {
+    "2%": {
+      "batches_over_10pct_without_qc": 0.0,
+      "batches_over_10pct_with_qc": 0.0,
+      "avg_reject_rate_shipped": 0.0007
+    },
+    "5%": {
+      "batches_over_10pct_without_qc": 0.012,
+      "batches_over_10pct_with_qc": 0.0,
+      "avg_reject_rate_shipped": 0.002
+    },
+    "10%": {
+      "batches_over_10pct_without_qc": 0.42,
+      "batches_over_10pct_with_qc": 0.0,
+      "avg_reject_rate_shipped": 0.0037
+    },
+    "20%": {
+      "batches_over_10pct_without_qc": 0.997,
+      "batches_over_10pct_with_qc": 0.0,
+      "avg_reject_rate_shipped": 0.0087
+    }
+  },
+  "errors": [
+    {
+      "id": "es_007.wav",
+      "variant": "heavy_noise",
+      "label": "reject",
+      "reasons": []
+    },
+    {
+      "id": "es_092.wav",
+      "variant": "heavy_noise",
+      "label": "reject",
+      "reasons": []
+    },
+    {
+      "id": "kk_029.wav",
+      "variant": "mild_noise",
+      "label": "accept",
+      "reasons": [
+        "long silence"
+      ]
+    },
+    {
+      "id": "kk_031.wav",
+      "variant": "heavy_noise",
+      "label": "reject",
+      "reasons": []
+    },
+    {
+      "id": "kk_047.wav",
+      "variant": "heavy_noise",
+      "label": "reject",
+      "reasons": []
+    },
+    {
+      "id": "kk_058.wav",
+      "variant": "heavy_noise",
+      "label": "reject",
+      "reasons": []
+    },
+    {
+      "id": "kk_060.wav",
+      "variant": "quieter",
+      "label": "accept",
+      "reasons": [
+        "long silence"
+      ]
+    },
+    {
+      "id": "ur_078.wav",
+      "variant": "clean",
+      "label": "accept",
+      "reasons": [
+        "does not match the prompt"
+      ]
+    }
+  ],
+  "reason_counts": {
+    "too short or cut off": 21,
+    "does not match the prompt": 89,
+    "clipping": 25,
+    "wrong language": 16,
+    "long silence": 6,
+    "too quiet": 15,
+    "too noisy": 15
+  }
+}

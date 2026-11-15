@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>DataTasks Speech QC</title>
+<meta name="description" content="Live prototype: automatic quality check for read-speech recordings, phone + server.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f6f6f1; --surface: #ffffff; --ink: #17181a; --muted: #62645e; --line: #e2e2d8;
+    --ok: #2f7d32; --ok-bg: #e5f3e1; --bad: #b23a22; --bad-bg: #fbe6df; --accent: #4b49c6; --accent-bg: #e9e8fb;
+    --warn-bg: #fff4d6; --bar: #d9d9cf; --font: "Inter", system-ui, sans-serif; --display: "Space Grotesk", "Inter", system-ui, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+    --bg: #141513; --surface: #1d1f1c; --ink: #ecece6; --muted: #a3a59c; --line: #33352f;
+    --ok: #7cc77f; --ok-bg: #1f3320; --bad: #f08a72; --bad-bg: #3a221c; --accent: #a9a7ff; --accent-bg: #2a2950; --warn-bg: #3a3218; --bar: #3a3c36; color-scheme: dark } }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 var(--font); }
+  .wrap { max-width: 1020px; margin: 0 auto; padding: 28px max(16px, env(safe-area-inset-right)) 56px max(16px, env(safe-area-inset-left)); display: flex; flex-direction: column; gap: 22px; }
+  h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; }
+  h1 { font-size: 30px; } h2 { font-size: 20px; } h3 { font-size: 15px; }
+  .lede { color: var(--muted); max-width: 70ch; margin: 6px 0 0; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px; min-width: 0; }
+  .eyebrow { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  .note { font-size: 13px; color: var(--muted); }
+  .kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 14px; }
+  .kpi { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px; }
+  .kpi b { display: block; font-family: var(--display); font-size: 26px; }
+  .kpi span { font-size: 12.5px; color: var(--muted); }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; padding: 3px; gap: 2px; background: var(--bg); }
+  .seg button { border: 0; background: transparent; color: var(--ink); padding: 6px 14px; border-radius: 999px; font: inherit; font-weight: 600; cursor: pointer; }
+  .seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .chip { border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 999px; padding: 6px 12px; font: inherit; font-size: 13.5px; cursor: pointer; }
+  .chip[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-bg); font-weight: 600; }
+  .prompt { font-size: 21px; line-height: 1.4; font-family: var(--display); margin: 8px 0 4px; }
+  .howto { background: var(--warn-bg); border-radius: 8px; padding: 8px 12px; font-size: 14px; margin-top: 10px; }
+  .row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+  .btn { font: inherit; font-weight: 600; border-radius: 999px; border: 1px solid var(--ink); background: var(--ink); color: var(--bg); padding: 10px 18px; cursor: pointer; }
+  .btn.rec { background: var(--bad); border-color: var(--bad); color: #fff; }
+  .btn.ghost { background: transparent; color: var(--ink); border-color: var(--line); font-weight: 500; }
+  .btn:disabled { opacity: .5; cursor: default; }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .timer { font-variant-numeric: tabular-nums; color: var(--muted); }
+  .verdict { display: inline-block; font-weight: 700; padding: 3px 12px; border-radius: 999px; }
+  .verdict.ok { background: var(--ok-bg); color: var(--ok); } .verdict.bad { background: var(--bad-bg); color: var(--bad); }
+  .panel { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; margin-top: 12px; }
+  .panel.server { background: var(--accent-bg); border-color: transparent; }
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; font-variant-numeric: tabular-nums; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: 11.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+  .scroll { overflow-x: auto; }
+  audio { width: 100%; margin-top: 10px; }
+  /* architecture */
+  .arch { display: grid; grid-template-columns: 1fr 2fr; gap: 14px; margin-top: 14px; }
+  .zone { border: 1px dashed var(--line); border-radius: 12px; padding: 12px; }
+  .zone > .eyebrow { margin-bottom: 8px; }
+  .steps { display: flex; flex-direction: column; gap: 8px; }
+  .srv { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .node { border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 10px 12px; transition: border-color .2s, background .2s; }
+  .node b { display: block; font-size: 14px; }
+  .node span { font-size: 12.5px; color: var(--muted); }
+  .node .ms { float: right; font-size: 12px; font-variant-numeric: tabular-nums; color: var(--accent); font-weight: 600; }
+  .node.active { border-color: var(--accent); background: var(--accent-bg); }
+  .node.done { border-color: var(--ok); }
+  .node.fail { border-color: var(--bad); }
+  .flow { font-size: 12.5px; color: var(--muted); margin-top: 10px; }
+  .feed td:nth-child(1) { white-space: nowrap; color: var(--muted); }
+  .tag { font-size: 11.5px; border-radius: 6px; padding: 1px 6px; background: var(--bg); border: 1px solid var(--line); }
+  ul.limits { margin: 8px 0 0; padding-left: 18px; }
+  a { color: var(--accent); }
+  @media (max-width: 760px) { .grid2, .arch, .srv { grid-template-columns: 1fr; } .kpis { grid-template-columns: 1fr; } h1 { font-size: 25px; } }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">DataTasks · Build prototype · live</div>
+    <h1>Speech QC: is this recording good enough to pay for?</h1>
+    <p class="lede">Contributors read a sentence aloud on their phone. Before we pay for it and ship it to a buyer, this check decides: accept or re-record, with a reason the contributor sees. Try it with your own voice in English or Russian, including the mistakes contributors make.</p>
+    <div class="kpis">
+      <div class="kpi"><b>97%</b><span>of bad recordings caught (145 of 150)</span></div>
+      <div class="kpi"><b>2%</b><span>of good recordings wrongly rejected (3 of 150)</span></div>
+      <div class="kpi"><b id="stat-total">–</b><span id="stat-label">checks run on this server so far</span></div>
+    </div>
+    <p class="note" style="margin-top:8px">Measured once, with frozen thresholds, on 300 real recordings the tuning never saw (FLEURS: Spanish, Kazakh, Urdu; Whisper small). Targets were ≥90% and ≤5%. English and Russian here are for trying it yourself; they are not in these numbers.</p>
+  </header>
+
+  <section class="card" aria-labelledby="try">
+    <h2 id="try">Record a sentence</h2>
+    <div class="grid2" style="margin-top:12px">
+      <div>
+        <div class="seg" role="group" aria-label="Language">
+          <button type="button" data-lang="en" aria-pressed="true">English</button>
+          <button type="button" data-lang="ru" aria-pressed="false">Русский</button>
+        </div>
+        <div class="eyebrow" style="margin-top:16px">1 · Choose what to do</div>
+        <div class="chips" id="scenarios" role="group" aria-label="Scenario"></div>
+        <div class="eyebrow" style="margin-top:16px">2 · The sentence the app asks for</div>
+        <p class="prompt" id="prompt"></p>
+        <button type="button" class="chip" id="another">Another sentence</button>
+        <div class="howto" id="howto"></div>
+        <div class="row">
+          <button type="button" class="btn rec" id="recbtn">● Record</button>
+          <span class="timer" id="timer"></span>
+          <label class="btn ghost" style="cursor:pointer">Upload a file<input type="file" id="file" accept="audio/*" hidden></label>
+        </div>
+        <p class="note" id="micnote" style="margin-top:8px">The browser will ask for your microphone. Recording stops by itself after 30 seconds.</p>
+      </div>
+      <div id="out" aria-live="polite">
+        <div class="eyebrow">3 · Verdict</div>
+        <p class="note">Record or upload, and the verdict appears here: first from the phone checks, a second later from the server.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="card" aria-labelledby="arch">
+    <h2 id="arch">How it works</h2>
+    <p class="lede">Two layers. Cheap checks run on the phone, so a bad take is re-recorded on the spot and never uploaded. The server re-checks everything, because a phone can be tampered with, then runs speech recognition. Steps light up as your recording goes through.</p>
+    <div class="arch">
+      <div class="zone">
+        <div class="eyebrow">Contributor's phone (this browser)</div>
+        <div class="steps">
+          <div class="node" id="n-rec"><span class="ms"></span><b>Record</b><span>16 kHz mono WAV</span></div>
+          <div class="node" id="n-phone"><span class="ms"></span><b>Phone checks</b><span>length, silence, clipping, loudness, noise</span></div>
+          <div class="node" id="n-upload"><span class="ms"></span><b>Upload</b><span>audio + the prompt shown</span></div>
+        </div>
+      </div>
+      <div class="zone">
+        <div class="eyebrow">Server · Supabase edge function <code>qc-check</code></div>
+        <div class="srv">
+          <div class="node" id="n-signal"><span class="ms"></span><b>Re-check signal</b><span>same checks; never trust the phone</span></div>
+          <div class="node" id="n-storage"><span class="ms"></span><b>Store recording</b><span>Supabase Storage, private bucket</span></div>
+          <div class="node" id="n-asr"><span class="ms"></span><b>Speech recognition</b><span>Whisper: language + words</span></div>
+          <div class="node" id="n-decision"><span class="ms"></span><b>Decide</b><span>language matches, text error ≤ limit</span></div>
+          <div class="node" id="n-log" style="grid-column: 1 / -1"><span class="ms"></span><b>Log the decision</b><span>Postgres <code>qc.checks</code> (own schema, not exposed): feeds the buyer report, the 10% batch rule and threshold tuning</span></div>
+        </div>
+      </div>
+    </div>
+    <p class="flow">At scale the same function sits behind a queue; the few borderline recordings (target ≤5% of volume) go to human review instead of an automatic verdict, and accepted recordings are packed into buyer batches that must stay under the buyer's 10% rejection rule.</p>
+  </section>
+
+  <section class="card" aria-labelledby="feed">
+    <h2 id="feed">Latest checks on this server</h2>
+    <p class="lede">Read from the decision log. Audio and network data are not shown.</p>
+    <div class="scroll" style="margin-top:10px"><table class="feed" id="feedtbl"><tr><td class="note">Loading…</td></tr></table></div>
+  </section>
+
+  <section class="card" aria-labelledby="limits">
+    <h2 id="limits">What this does not prove yet</h2>
+    <ul class="limits note">
+      <li>The measured numbers come from planted defects on real recordings, so labels are known. Real buyer decisions are the next test.</li>
+      <li>FLEURS is read in quiet rooms. Car noise, phone microphones and spontaneous speech will be harder.</li>
+      <li>This live server uses Whisper large-v3 (hosted) instead of Whisper small used in the measurement, and English and Russian reuse the Spanish text limit. Both are untested against the targets.</li>
+    </ul>
+    <p class="note" style="margin-top:10px">Code and measurement: <a id="codelink" href="#">repository</a>.</p>
+  </section>
+</div>
+
+<script src="qc.js"></script>
+<script src="config.js"></script>
+<script>
+const CFG = window.QC_CONFIG || {};
+// Phone-side thresholds: frozen values from eval/results/results.json.
+const TH = { min_speech_ratio: 0.35, chars_per_s: 14.0, max_clip_ratio: 0.001, min_speech_dbfs: -42.0, min_snr_db: 10, max_edge_silence_s: 4.0, max_gap_s: 3.0 };
+if (CFG.codeUrl) document.getElementById('codelink').href = CFG.codeUrl;
+
+const PROMPTS = {
+  en: ["Please call me back after six, I am driving to the airport now.",
+       "The driver arrived on time and helped us with the heavy bags.",
+       "Turn left at the next corner and stop near the green pharmacy.",
+       "We usually order a taxi when it rains in the evening."],
+  ru: ["Перезвоните мне после шести, я сейчас еду в аэропорт.",
+       "Водитель приехал вовремя и помог нам с тяжёлыми сумками.",
+       "На следующем перекрёстке поверните налево и остановитесь у аптеки.",
+       "Вечером в дождь мы обычно заказываем такси."],
+};
+const OTHER = { en: "My favourite season is autumn, because the city is quiet.", ru: "Мне больше всего нравится осень, потому что в городе тихо." };
+const SCENARIOS = [
+  { id: "correct", label: "Read it right", expect: "accept", how: { en: "Read the sentence normally, in a quiet place.", ru: "Read the sentence normally, in a quiet place." } },
+  { id: "wrong_text", label: "Read a different sentence", expect: "reject", how: { en: `Instead, read: “${OTHER.en}”`, ru: `Instead, read: «${OTHER.ru}»` } },
+  { id: "cut_off", label: "Stop halfway", expect: "reject", how: { en: "Read only the first few words, then stop.", ru: "Read only the first few words, then stop." } },
+  { id: "long_silence", label: "Pause in the middle", expect: "reject", how: { en: "Read half, stay silent for 5 seconds, then finish.", ru: "Read half, stay silent for 5 seconds, then finish." } },
+  { id: "wrong_language", label: "Use another language", expect: "reject", how: { en: "Say the sentence in Russian (or any other language).", ru: "Say the sentence in English (or any other language)." } },
+  { id: "too_quiet", label: "Whisper it", expect: "reject", how: { en: "Whisper the sentence from an arm's length away.", ru: "Whisper the sentence from an arm's length away." } },
+];
+const REASONS = { "too short or cut off": "too short or cut off", clipping: "clipping (too loud)", "too quiet": "too quiet",
+  "too noisy": "too noisy", "long silence": "long silence", "wrong language": "wrong language", "does not match the prompt": "words do not match the sentence" };
+
+let lang = "en", scen = "correct", pi = 0;
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const prompt = () => PROMPTS[lang][pi % PROMPTS[lang].length];
+
+function renderPicker() {
+  document.querySelectorAll('[data-lang]').forEach(b => b.setAttribute('aria-pressed', b.dataset.lang === lang));
+  $('scenarios').innerHTML = SCENARIOS.map(s => `<button type="button" class="chip" data-s="${s.id}" aria-pressed="${s.id === scen}">${esc(s.label)}</button>`).join('');
+  $('prompt').textContent = prompt();
+  $('prompt').lang = lang;
+  const s = SCENARIOS.find(s => s.id === scen);
+  $('howto').innerHTML = `<b>${s.expect === 'accept' ? 'Expected: accept.' : 'Expected: re-record.'}</b> ${esc(s.how[lang])}`;
+}
+document.querySelectorAll('[data-lang]').forEach(b => b.onclick = () => { lang = b.dataset.lang; renderPicker(); });
+$('scenarios').onclick = e => { const b = e.target.closest('[data-s]'); if (b) { scen = b.dataset.s; renderPicker(); } };
+$('another').onclick = () => { pi++; renderPicker(); };
+renderPicker();
+
+// ---------- architecture highlighting ----------
+const NODES = ['rec', 'phone', 'upload', 'signal', 'storage', 'asr', 'decision', 'log'];
+function node(id, state, ms) {
+  const el = $('n-' + id); el.classList.remove('active', 'done', 'fail'); if (state) el.classList.add(state);
+  el.querySelector('.ms').textContent = ms != null ? `${ms} ms` : '';
+}
+const resetNodes = () => NODES.forEach(n => node(n, null));
+
+// ---------- recording ----------
+let rec = null, chunks = [], stream = null, tStart = 0, tick = null;
+function wavFrom(x) {
+  const b = new ArrayBuffer(44 + x.length * 2), d = new DataView(b);
+  const w = (o, s) => { for (let i = 0; i < 4; i++) d.setUint8(o + i, s.charCodeAt(i)); };
+  w(0, 'RIFF'); d.setUint32(4, 36 + x.length * 2, true); w(8, 'WAVE'); w(12, 'fmt '); d.setUint32(16, 16, true);
+  d.setUint16(20, 1, true); d.setUint16(22, 1, true); d.setUint32(24, 16000, true); d.setUint32(28, 32000, true);
+  d.setUint16(32, 2, true); d.setUint16(34, 16, true); w(36, 'data'); d.setUint32(40, x.length * 2, true);
+  for (let i = 0; i < x.length; i++) d.setInt16(44 + 2 * i, Math.max(-1, Math.min(1, x[i])) * 32767, true);
+  return new Blob([b], { type: 'audio/wav' });
+}
+async function startRec() {
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
+  } catch (e) {
+    $('micnote').textContent = 'No microphone access. Allow it in the browser, or upload a file instead.'; return;
+  }
+  chunks = []; rec = new MediaRecorder(stream);
+  rec.ondataavailable = e => e.data.size && chunks.push(e.data);
+  rec.onstop = async () => { stream.getTracks().forEach(t => t.stop()); clearInterval(tick); $('timer').textContent = '';
+    $('recbtn').textContent = '● Record'; node('rec', 'done', Math.round(performance.now() - tStart));
+    await handle(await new Blob(chunks, { type: rec.mimeType }).arrayBuffer()); };
+  rec.start(); tStart = performance.now(); resetNodes(); node('rec', 'active');
+  $('recbtn').textContent = '■ Stop';
+  tick = setInterval(() => { const s = (performance.now() - tStart) / 1000; $('timer').textContent = s.toFixed(1) + ' s'; if (s >= 30) rec.state === 'recording' && rec.stop(); }, 100);
+}
+$('recbtn').onclick = () => (rec && rec.state === 'recording') ? rec.stop() : startRec();
+$('file').onchange = async e => { const f = e.target.files[0]; if (!f) return; resetNodes(); node('rec', 'done'); await handle(await f.arrayBuffer()); e.target.value = ''; };
+
+// ---------- check ----------
+function sigTable(sig) {
+  return `<div class="scroll"><table><tr><th>Measure</th><th>Value</th><th>Limit</th></tr>
+  <tr><td>Speech</td><td>${sig.speech_s.toFixed(1)} s</td><td>≥ ${(TH.min_speech_ratio * Math.max(1, prompt().length / TH.chars_per_s)).toFixed(1)} s</td></tr>
+  <tr><td>Noise (SNR)</td><td>${sig.snr_db.toFixed(1)} dB</td><td>≥ ${TH.min_snr_db} dB</td></tr>
+  <tr><td>Loudness of speech</td><td>${sig.speech_dbfs.toFixed(1)} dBFS</td><td>≥ ${TH.min_speech_dbfs}</td></tr>
+  <tr><td>Clipped samples</td><td>${(sig.clip_ratio * 100).toFixed(2)}%</td><td>≤ ${(TH.max_clip_ratio * 100).toFixed(2)}%</td></tr>
+  <tr><td>Silence: start / end / longest pause</td><td>${sig.lead_silence_s.toFixed(1)} / ${sig.trail_silence_s.toFixed(1)} / ${sig.max_gap_s.toFixed(1)} s</td><td>≤ ${TH.max_edge_silence_s} / ${TH.max_edge_silence_s} / ${TH.max_gap_s} s</td></tr></table></div>`;
+}
+const badge = ok => ok ? '<span class="verdict ok">Accept</span>' : '<span class="verdict bad">Re-record</span>';
+const reasonText = rs => rs.map(r => REASONS[r] || r).join(', ');
+
+async function handle(buf) {
+  const out = $('out');
+  let x;
+  node('phone', 'active');
+  const t = performance.now();
+  try { x = await decodeTo16k(buf); } catch { out.innerHTML = '<div class="eyebrow">3 · Verdict</div><p class="note">This audio could not be decoded. Try again, or upload a wav or mp3.</p>'; node('phone', 'fail'); return; }
+  const sig = analyzeSignal(x), phone = checkSignal(sig, prompt(), TH);
+  node('phone', phone.accept ? 'done' : 'fail', Math.round(performance.now() - t));
+  const wav = wavFrom(x), url = URL.createObjectURL(wav);
+  const s = SCENARIOS.find(s => s.id === scen);
+  out.innerHTML = `<div class="eyebrow">3 · Verdict <span class="tag">${esc(s.label)}</span></div>
+    <div class="panel"><div class="eyebrow">Phone checks · instant</div>
+      <p style="margin:6px 0">${badge(phone.accept)} ${phone.reasons.length ? '· ' + esc(reasonText(phone.reasons)) : ''}</p>
+      ${phone.accept ? '' : '<p class="note" style="margin:0 0 6px">In the app the contributor would re-record now, and nothing is uploaded. Here we send it anyway so you can see the server side.</p>'}
+      ${sigTable(sig)}</div>
+    <div class="panel server" id="srv"><div class="eyebrow">Server · speech recognition</div><p class="note" style="margin:6px 0 0">Sending…</p></div>
+    <audio controls src="${url}"></audio>`;
+  if (!CFG.supabaseUrl || !CFG.anonKey) { $('srv').innerHTML = '<div class="eyebrow">Server</div><p class="note">Server is not configured on this copy of the page; only the phone checks ran.</p>'; return; }
+
+  node('upload', 'active');
+  const form = new FormData();
+  form.append('audio', wav, 'rec.wav'); form.append('lang', lang); form.append('prompt', prompt()); form.append('scenario', scen);
+  form.append('phone', JSON.stringify({ accept: phone.accept, reasons: phone.reasons }));
+  const t1 = performance.now();
+  ['signal', 'storage', 'asr', 'decision', 'log'].forEach(n => node(n, 'active'));
+  let r, j;
+  try {
+    r = await fetch(`${CFG.supabaseUrl}/functions/v1/qc-check`, { method: 'POST', headers: { Authorization: `Bearer ${CFG.anonKey}`, apikey: CFG.anonKey }, body: form });
+    j = await r.json();
+  } catch (e) { j = { error: 'Server unreachable' }; }
+  const rtt = Math.round(performance.now() - t1);
+  if (!r || !r.ok || j.error) {
+    ['upload', 'signal', 'storage', 'asr', 'decision', 'log'].forEach(n => node(n, 'fail'));
+    $('srv').innerHTML = `<div class="eyebrow">Server</div><p class="note" style="margin:6px 0 0">${esc(j.error || 'Server error')}. The phone verdict above still stands.</p>`; return;
+  }
+  const st = j.steps || {};
+  node('upload', 'done', Math.max(0, rtt - (st.total || 0)));
+  ['signal', 'storage', 'asr', 'decision', 'log'].forEach(n => node(n, 'done', st[n]));
+  if (!j.accept) node('decision', 'fail', st.decision);
+  const match = s.expect === (j.accept ? 'accept' : 'reject');
+  $('srv').innerHTML = `<div class="eyebrow">Server · final verdict</div>
+    <p style="margin:6px 0">${badge(j.accept)} ${j.reasons.length ? '· ' + esc(reasonText(j.reasons)) : ''}</p>
+    <p style="margin:0 0 6px">Heard as: <i lang="${lang}">${esc(j.transcript || '(nothing)')}</i></p>
+    <p class="note" style="margin:0">Language heard: ${esc(j.detected_lang || '?')} · text error vs. sentence ${j.cer == null ? '–' : Math.round(j.cer * 100) + '%'} (limit 25%) · usable speech we would pay for: <b>${(j.usable_s || 0).toFixed(1)} s</b> · ${rtt} ms round trip · check #${j.id}</p>
+    <p class="note" style="margin:6px 0 0">${match ? '✓ Matches what this case should get.' : '✗ Not what this case should get. Misses like this are what the measured error rates count.'}</p>`;
+  loadFeed();
+}
+
+// ---------- live feed (read through the edge function; the log table is not exposed) ----------
+async function loadFeed() {
+  if (!CFG.supabaseUrl || !CFG.anonKey) { $('feedtbl').innerHTML = '<tr><td class="note">Server not configured.</td></tr>'; return; }
+  try {
+    const r = await fetch(`${CFG.supabaseUrl}/functions/v1/qc-check`, { headers: { apikey: CFG.anonKey, Authorization: `Bearer ${CFG.anonKey}` } });
+    if (!r.ok) throw new Error(r.status);
+    const { rows, stats } = await r.json();
+    const s = stats || { total: 0, accepted: 0 };
+    $('stat-total').textContent = s.total; $('stat-label').textContent = `checks run on this server so far, ${s.accepted} accepted`;
+    $('feedtbl').innerHTML = '<tr><th>When</th><th>Lang</th><th>Case</th><th>Verdict</th><th>Heard as</th></tr>' + (rows.length ? rows.map(r =>
+      `<tr><td>${new Date(r.created_at).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</td><td>${esc(r.lang)}</td><td>${esc((SCENARIOS.find(s => s.id === r.scenario) || {}).label || r.scenario || '')}</td>
+       <td>${r.accept ? '<span class="verdict ok">Accept</span>' : '<span class="verdict bad">Re-record</span>'}<div class="note">${esc(reasonText(r.reasons || []))}</div></td><td lang="${esc(r.lang)}">${esc(r.transcript || '')}</td></tr>`).join('')
+      : '<tr><td colspan="5" class="note">No checks yet. Be the first.</td></tr>');
+  } catch (e) { $('feedtbl').innerHTML = '<tr><td class="note">Could not load the log right now.</td></tr>'; }
+}
+loadFeed();
+</script>
+</body>
+</html>

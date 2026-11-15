@@ -1,0 +1,157 @@
+{
+  "n": {
+    "dev": 153,
+    "test": 147
+  },
+  "thresholds": {
+    "min_speech_ratio": 0.35,
+    "chars_per_s": 14.0,
+    "max_clip_ratio": 0.001,
+    "min_speech_dbfs": -42.0,
+    "min_snr_db": 10,
+    "max_edge_silence_s": 4.0,
+    "max_gap_s": 3.0,
+    "min_lang_prob": {
+      "es": 0.2,
+      "kk": 0.0,
+      "ur": 0.05
+    },
+    "max_cer": {
+      "es": 0.25,
+      "kk": 0.55,
+      "ur": 0.35
+    }
+  },
+  "dev": {
+    "tp": 60,
+    "fn": 0,
+    "fp": 4,
+    "tn": 89,
+    "recall": 1.0,
+    "false_reject_rate": 0.043010752688172046,
+    "precision": 0.9375
+  },
+  "test_full": {
+    "tp": 66,
+    "fn": 3,
+    "fp": 5,
+    "tn": 73,
+    "recall": 0.9565217391304348,
+    "false_reject_rate": 0.0641025641025641,
+    "precision": 0.9295774647887324
+  },
+  "test_signal_only": {
+    "tp": 41,
+    "fn": 28,
+    "fp": 4,
+    "tn": 74,
+    "recall": 0.5942028985507246,
+    "false_reject_rate": 0.05128205128205128,
+    "precision": 0.9111111111111111
+  },
+  "test_by_variant": {
+    "clean": {
+      "correct": 47,
+      "n": 52,
+      "share": 0.904
+    },
+    "clipping": {
+      "correct": 8,
+      "n": 8,
+      "share": 1.0
+    },
+    "cut_off": {
+      "correct": 9,
+      "n": 9,
+      "share": 1.0
+    },
+    "heavy_noise": {
+      "correct": 11,
+      "n": 14,
+      "share": 0.786
+    },
+    "long_silence": {
+      "correct": 9,
+      "n": 9,
+      "share": 1.0
+    },
+    "mild_noise": {
+      "correct": 20,
+      "n": 20,
+      "share": 1.0
+    },
+    "quieter": {
+      "correct": 6,
+      "n": 6,
+      "share": 1.0
+    },
+    "too_quiet": {
+      "correct": 6,
+      "n": 6,
+      "share": 1.0
+    },
+    "wrong_language": {
+      "correct": 13,
+      "n": 13,
+      "share": 1.0
+    },
+    "wrong_text": {
+      "correct": 10,
+      "n": 10,
+      "share": 1.0
+    }
+  },
+  "test_by_language": {
+    "es": {
+      "correct": 49,
+      "n": 50,
+      "share": 0.98
+    },
+    "kk": {
+      "correct": 39,
+      "n": 45,
+      "share": 0.867
+    },
+    "ur": {
+      "correct": 51,
+      "n": 52,
+      "share": 0.981
+    }
+  },
+  "batch_simulation_test": {
+    "2%": {
+      "batches_over_10pct_without_qc": 0.0,
+      "batches_over_10pct_with_qc": 0.0,
+      "avg_reject_rate_shipped": 0.0009
+    },
+    "5%": {
+      "batches_over_10pct_without_qc": 0.013,
+      "batches_over_10pct_with_qc": 0.0,
+      "avg_reject_rate_shipped": 0.0025
+    },
+    "10%": {
+      "batches_over_10pct_without_qc": 0.434,
+      "batches_over_10pct_with_qc": 0.0,
+      "avg_reject_rate_shipped": 0.0053
+    },
+    "20%": {
+      "batches_over_10pct_without_qc": 0.994,
+      "batches_over_10pct_with_qc": 0.0,
+      "avg_reject_rate_shipped": 0.0116
+    }
+  },
+  "test_reason_counts": {
+    "long silence": 14,
+    "does not match the prompt": 30,
+    "too short or cut off": 12,
+    "wrong language": 12,
+    "too quiet": 6,
+    "clipping": 8,
+    "too noisy": 5
+  },
+  "usable_seconds_accepted": {
+    "es": 8.21,
+    "kk": 9.32,
+    "ur": 7.4
+  }
+}

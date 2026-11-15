@@ -1,0 +1,206 @@
+<title>DataTasks Speech QC</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  /* Layout: one column of working sections — try it, samples, measured results, limits */
+  :root {
+    --bg: #f6f6f1; --surface: #ffffff; --ink: #17181a; --muted: #62645e; --line: #e2e2d8;
+    --ok: #2f7d32; --ok-bg: #e5f3e1; --bad: #b23a22; --bad-bg: #fbe6df; --accent: #4b49c6; --accent-bg: #e9e8fb;
+    --bar: #d9d9cf; --font: "Inter", system-ui, sans-serif; --display: "Space Grotesk", "Inter", system-ui, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+    --bg: #141513; --surface: #1d1f1c; --ink: #ecece6; --muted: #a3a59c; --line: #33352f;
+    --ok: #7cc77f; --ok-bg: #1f3320; --bad: #f08a72; --bad-bg: #3a221c; --accent: #a9a7ff; --accent-bg: #2a2950; --bar: #3a3c36; color-scheme: dark } }
+  :root[data-theme="dark"] {
+    --bg: #141513; --surface: #1d1f1c; --ink: #ecece6; --muted: #a3a59c; --line: #33352f;
+    --ok: #7cc77f; --ok-bg: #1f3320; --bad: #f08a72; --bad-bg: #3a221c; --accent: #a9a7ff; --accent-bg: #2a2950; --bar: #3a3c36; color-scheme: dark }
+  body { background: var(--bg); color: var(--ink); font: 15px/1.5 var(--font); }
+  .wrap { max-width: 980px; margin: 0 auto; padding-block: 28px 48px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: flex; flex-direction: column; gap: 22px; }
+  h1, h2 { font-family: var(--display); text-wrap: balance; margin: 0; }
+  h1 { font-size: 30px; } h2 { font-size: 20px; }
+  .lede { color: var(--muted); max-width: 68ch; margin: 6px 0 0; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px; min-width: 0; }
+  .eyebrow { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  label { font-size: 13px; font-weight: 600; display: block; margin: 10px 0 4px; }
+  textarea, select, input[type=file] { width: 100%; font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px; box-sizing: border-box; }
+  textarea { min-height: 70px; }
+  button { font: inherit; font-weight: 600; border-radius: 8px; border: 1px solid var(--ink); background: var(--ink); color: var(--bg); padding: 8px 14px; cursor: pointer; }
+  button.ghost { background: transparent; color: var(--ink); border-color: var(--line); font-weight: 500; }
+  button:focus-visible, select:focus-visible, textarea:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .samples { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .verdict { display: inline-block; font-weight: 700; padding: 3px 10px; border-radius: 999px; }
+  .verdict.ok { background: var(--ok-bg); color: var(--ok); } .verdict.bad { background: var(--bad-bg); color: var(--bad); }
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; font-variant-numeric: tabular-nums; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: 11.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+  .scroll { overflow-x: auto; }
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .kpi { background: var(--bg); border-radius: 8px; padding: 10px; }
+  .kpi b { display: block; font-family: var(--display); font-size: 26px; }
+  .kpi span { font-size: 12.5px; color: var(--muted); }
+  .bars { display: flex; flex-direction: column; gap: 6px; }
+  .brow { display: grid; grid-template-columns: 150px 1fr 54px; gap: 10px; align-items: center; font-size: 13px; }
+  .brow .t { background: var(--bar); height: 12px; border-radius: 6px; overflow: hidden; }
+  .brow .t i { display: block; height: 100%; background: var(--accent); }
+  .brow b { text-align: right; font-variant-numeric: tabular-nums; }
+  .note { font-size: 13px; color: var(--muted); }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .server { background: var(--accent-bg); border-radius: 8px; padding: 10px 12px; font-size: 13.5px; margin-top: 10px; }
+  audio { width: 100%; margin-top: 8px; }
+  .steps { margin: 10px 0 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; }
+  .quick { border-color: var(--accent); }
+  @media (max-width: 720px) { .grid2, .two { grid-template-columns: 1fr; } .kpis { grid-template-columns: 1fr 1fr; } .brow { grid-template-columns: 110px 1fr 46px; } }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">DataTasks · Build prototype</div>
+    <h1>Speech QC before a recording is sent</h1>
+    <p class="lede">Checks a read-speech recording the way a buyer would: enough speech, no long silence, no clipping, not too quiet or noisy, the right language, and the words of the prompt. The signal checks run here in your browser, as they would on a phone. Speech recognition (Whisper small) runs on the server; for the samples below its results are included.</p>
+  </header>
+
+  <section class="card quick" aria-labelledby="quick">
+    <h2 id="quick">How to check it in a minute</h2>
+    <ol class="steps">
+      <li><b>Pick a sample.</b> Under “Start here” below, click any button, for example “Heavy noise · Spanish”. These are real recordings the checks never saw while being tuned.</li>
+      <li><b>Read the verdict.</b> It appears next to the buttons: accept or re-record, the reason the contributor would see, and the seconds of speech we would pay for.</li>
+      <li><b>See how often it is right.</b> Scroll to “How we measured it”: <span id="quick-kpi">share of bad recordings caught and good ones wrongly rejected</span>, on recordings it never saw.</li>
+    </ol>
+    <p class="note" style="margin:8px 0 0">Your own file works too, but only the checks that run on the phone apply to it (length, silence, clipping, loudness, noise). The language and “said the right words” checks need the server, so they run for the samples only.</p>
+  </section>
+
+  <section class="card" aria-labelledby="try">
+    <h2 id="try">Check a recording</h2>
+    <div class="grid2">
+      <div>
+        <div class="eyebrow">Start here: a real recording from the fresh set</div>
+        <div class="samples" id="samples"></div>
+        <p class="note" style="margin-top:8px">One sample per case where the verdict was right. Misses are counted in the results below.</p>
+        <div class="eyebrow" style="margin-top:18px">Or check your own file (phone checks only)</div>
+        <label for="file">Audio file (wav, mp3, m4a, ogg)</label>
+        <input id="file" type="file" accept="audio/*">
+        <label for="prompt">Prompt that was read</label>
+        <textarea id="prompt">Podemos comenzar a llevar una vida más amigable con el planeta.</textarea>
+        <label for="lang">Language</label>
+        <select id="lang"><option value="es">Spanish</option><option value="kk">Kazakh</option><option value="ur">Urdu</option></select>
+        <div style="margin-top:12px"><button id="run">Check recording</button></div>
+      </div>
+      <div id="out" aria-live="polite">
+        <p class="note">The verdict appears here: accept or re-record, the reason, and the usable seconds of speech we would pay for.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="card" aria-labelledby="measured">
+    <h2 id="measured">How we measured it</h2>
+    <p class="lede" id="method"></p>
+    <div class="kpis" id="kpis" style="margin-top:14px"></div>
+    <div class="two" style="margin-top:18px">
+      <div><div class="eyebrow">Caught or passed correctly, by case (fresh set)</div><div class="bars" id="byvar" style="margin-top:8px"></div></div>
+      <div><div class="eyebrow">By language (fresh set)</div><div class="bars" id="bylang" style="margin-top:8px"></div>
+        <div class="eyebrow" style="margin-top:16px">Phone checks only vs. phone + server</div><div class="scroll"><table id="layers" style="margin-top:6px"></table></div></div>
+    </div>
+    <div class="eyebrow" style="margin-top:18px">Batches of 100 against the buyer's 10% rule</div>
+    <div class="scroll"><table id="batch" style="margin-top:6px"></table></div>
+  </section>
+
+  <section class="card" aria-labelledby="limits">
+    <h2 id="limits">What this does not prove yet</h2>
+    <ul class="note" style="margin:8px 0 0; padding-left:18px">
+      <li>Defects were planted on real recordings, so labels are known. Real buyer decisions (Common Voice reviews, then Buyer B's pilot) are the next test; Common Voice needs a signed-in download.</li>
+      <li>The fresh set has new sentences, but the defects come from the same generator. A defect type we did not think of is not measured.</li>
+      <li>FLEURS recordings are read in quiet rooms. Car noise, phone microphones and spontaneous speech will be harder.</li>
+      <li>Kazakh and Urdu recognition is weaker than Spanish, so their text check is looser.</li>
+    </ul>
+    <p class="note" style="margin-top:10px">Recordings: Google FLEURS (CC BY 4.0), Spanish (Latin America), Kazakh and Urdu. Code: prototype/qc and eval/ in this repository.</p>
+  </section>
+</div>
+
+<script>
+/*QCJS*/
+const TH = /*THRESHOLDS*/null;
+const RES = /*RESULTS*/null;
+const SAMPLES = /*SAMPLES*/null;
+const FRESH = /*FRESH*/null;
+const NAMES = { clean: 'Clean', mild_noise: 'Background talk', quieter: 'Quieter', wrong_text: 'Wrong sentence', heavy_noise: 'Heavy noise',
+  clipping: 'Clipping', cut_off: 'Cut off', wrong_language: 'Wrong language', long_silence: 'Long silence', too_quiet: 'Too quiet' };
+const LANGS = { es: 'Spanish', kk: 'Kazakh', ur: 'Urdu' };
+const pct = v => (v * 100).toFixed(0) + '%';
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+function renderResult(sig, phone, extra) {
+  const v = phone.accept ? '<span class="verdict ok">Accept</span>' : '<span class="verdict bad">Re-record</span>';
+  let h = `<div class="eyebrow">Phone-side checks</div><p style="margin:6px 0">${v} ${phone.reasons.length ? '· ' + esc(phone.reasons.join(', ')) : ''}</p>
+  <p class="note" style="margin:0 0 8px">Usable speech: <b>${phone.usable_s.toFixed(1)} s</b> of ${sig.duration_s.toFixed(1)} s</p>
+  <div class="scroll"><table><tr><th>Measure</th><th>Value</th><th>Limit</th></tr>
+  <tr><td>Speech seconds</td><td>${sig.speech_s.toFixed(1)} s</td><td>≥ ${(TH.min_speech_ratio * Math.max(1, document.getElementById('prompt').value.length / TH.chars_per_s)).toFixed(1)} s</td></tr>
+  <tr><td>Noise (SNR)</td><td>${sig.snr_db.toFixed(1)} dB</td><td>≥ ${TH.min_snr_db} dB</td></tr>
+  <tr><td>Loudness of speech</td><td>${sig.speech_dbfs.toFixed(1)} dBFS</td><td>≥ ${TH.min_speech_dbfs}</td></tr>
+  <tr><td>Clipped samples</td><td>${(sig.clip_ratio * 100).toFixed(2)}%</td><td>≤ ${(TH.max_clip_ratio * 100).toFixed(2)}%</td></tr>
+  <tr><td>Silence: start / end / longest pause</td><td>${sig.lead_silence_s.toFixed(1)} / ${sig.trail_silence_s.toFixed(1)} / ${sig.max_gap_s.toFixed(1)} s</td><td>≤ ${TH.max_edge_silence_s} / ${TH.max_edge_silence_s} / ${TH.max_gap_s} s</td></tr>
+  </table></div>`;
+  if (extra) h += extra;
+  document.getElementById('out').innerHTML = h;
+}
+
+async function runCheck(arrayBuffer, extra) {
+  const out = document.getElementById('out');
+  out.innerHTML = '<p class="note">Checking…</p>';
+  try {
+    const x = await decodeTo16k(arrayBuffer);
+    const sig = analyzeSignal(x);
+    renderResult(sig, checkSignal(sig, document.getElementById('prompt').value, TH), extra);
+  } catch (e) {
+    out.innerHTML = '<p class="note">This file could not be decoded. Try a wav or mp3 recording.</p>';
+  }
+}
+
+document.getElementById('run').addEventListener('click', async () => {
+  const f = document.getElementById('file').files[0];
+  if (!f) { document.getElementById('out').innerHTML = '<p class="note">Choose an audio file first, or pick a sample.</p>'; return; }
+  runCheck(await f.arrayBuffer(), '<p class="note" style="margin-top:10px">Speech recognition against the prompt runs on the server and is not part of this page.</p>');
+});
+
+function b64ToBuf(b64) { const s = atob(b64), a = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) a[i] = s.charCodeAt(i); return a.buffer; }
+
+const box = document.getElementById('samples');
+SAMPLES.forEach((s, i) => {
+  const b = document.createElement('button');
+  b.className = 'ghost'; b.id = 'sample-' + i;
+  b.textContent = `${NAMES[s.variant] || s.variant} · ${LANGS[s.lang]}`;
+  b.addEventListener('click', () => {
+    document.getElementById('prompt').value = s.prompt;
+    document.getElementById('lang').value = s.lang;
+    const sv = s.server;
+    const extra = `<div class="server"><div class="eyebrow">Final verdict, with the server check (Whisper small)</div>
+      <p style="margin:6px 0">${sv.accept ? '<span class="verdict ok">Accept</span>' : '<span class="verdict bad">Re-record</span>'} ${sv.reasons.length ? '· ' + esc(sv.reasons.join(', ')) : ''}</p>
+      <p style="margin:0">Heard as: <i>${esc(s.asr.transcript.slice(0, 160))}</i></p>
+      <p class="note" style="margin:4px 0 0">Language heard: ${s.asr.language}${s.lang === "ur" && s.asr.language === "hi" ? " (spoken Urdu and Hindi are one language; counted as Urdu)" : ""} · character error vs. prompt ${pct(s.asr.cer)} · planted case: ${NAMES[s.variant]} (should ${s.label === 'accept' ? 'pass' : 'be rejected'})</p></div>
+      <audio controls src="data:audio/wav;base64,${s.audio}"></audio>`;
+    runCheck(b64ToBuf(s.audio), extra);
+  });
+  box.appendChild(b);
+});
+
+// measured results: headline = fresh set, checked once with frozen thresholds
+const t = FRESH.full, p = FRESH.signal_only, h = RES.test_full;
+document.getElementById('method').textContent = `Built on ${RES.n.dev + RES.n.test} real FLEURS recordings in Spanish, Kazakh and Urdu, each kept acceptable or given one defect a buyer rejects. Thresholds were tuned on ${RES.n.dev} of them and then frozen. The numbers below come from a fresh set of ${FRESH.n}: a different FLEURS split with no sentence in common, defects planted with a new random seed, checked once with no further tuning. On the held-out half of the build set the result was ${pct(h.recall)} caught and ${pct(h.false_reject_rate)} wrongly rejected, but that half was looked at while fixing the checks.`;
+document.getElementById('kpis').innerHTML = [
+  [pct(t.recall), 'of bad recordings caught'], [pct(t.false_reject_rate), 'of good recordings wrongly rejected'],
+  [pct(t.precision), 'of rejections were right'], [`${t.tp + t.fn} / ${t.fp + t.tn}`, 'bad / good recordings in the fresh set']
+].map(([b, s]) => `<div class="kpi"><b>${b}</b><span>${s}</span></div>`).join('');
+document.getElementById('quick-kpi').textContent = `${pct(t.recall)} of bad recordings caught and ${pct(t.false_reject_rate)} of good ones wrongly rejected`;
+function bars(id, obj, nameMap) {
+  document.getElementById(id).innerHTML = Object.entries(obj).map(([k, v]) =>
+    `<div class="brow"><span>${esc((nameMap && nameMap[k]) || k)} <span class="note">(${v.n})</span></span><div class="t"><i style="width:${v.share * 100}%"></i></div><b>${pct(v.share)}</b></div>`).join('');
+}
+bars('byvar', FRESH.by_variant, NAMES); bars('bylang', FRESH.by_language, LANGS);
+document.getElementById('layers').innerHTML = `<tr><th></th><th>Caught</th><th>Wrongly rejected</th></tr>
+  <tr><td>Phone checks only</td><td>${pct(p.recall)}</td><td>${pct(p.false_reject_rate)}</td></tr>
+  <tr><td>Phone + server</td><td>${pct(t.recall)}</td><td>${pct(t.false_reject_rate)}</td></tr>`;
+document.getElementById('batch').innerHTML = `<tr><th>Bad recordings submitted</th><th>Batches over 10% without our check</th><th>With our check</th><th>Bad share in what we ship</th></tr>` +
+  Object.entries(FRESH.batch_simulation).map(([k, v]) => `<tr><td>${k}</td><td>${pct(v.batches_over_10pct_without_qc)}</td><td>${pct(v.batches_over_10pct_with_qc)}</td><td>${(v.avg_reject_rate_shipped * 100).toFixed(1)}%</td></tr>`).join('');
+</script>

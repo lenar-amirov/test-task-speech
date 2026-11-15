@@ -14,7 +14,7 @@ const ASR_MODEL = Deno.env.get("ASR_MODEL") ?? "whisper-large-v3";
 const cors = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...cors, "Content-Type": "application/json" } });
@@ -26,14 +26,6 @@ async function sha256(s: string) {
 
 // The decision log lives in schema `qc`, which is not exposed through the public API; only this function reaches it.
 const sql = postgres(Deno.env.get("SUPABASE_DB_URL")!, { max: 2, prepare: false });
-
-async function feed() {
-  const rows = await sql`select id, created_at, lang, scenario, transcript, detected_lang, cer, accept, reasons, usable_s
-    from qc.checks order by created_at desc limit 10`;
-  const [stats] = await sql`select count(*)::int as total, count(*) filter (where accept)::int as accepted,
-    coalesce(sum(usable_s), 0)::real as usable_seconds from qc.checks`;
-  return { rows, stats };
-}
 
 async function transcribe(wav: Uint8Array, language?: string) {
   const key = Deno.env.get("GROQ_API_KEY");
@@ -54,10 +46,8 @@ async function transcribe(wav: Uint8Array, language?: string) {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
-  if (req.method === "GET") {
-    try { return json(await feed()); } catch (e) { console.error(e); return json({ error: "feed unavailable" }, 500); }
-  }
-  if (req.method !== "POST") return json({ error: "GET or POST only" }, 405);
+  // The decision log is private: read it in the Supabase SQL editor (qc.checks), not through this public endpoint.
+  if (req.method !== "POST") return json({ error: "POST only" }, 405);
   const t0 = performance.now();
   const steps: Record<string, number> = {};
   const lap = (name: string, from: number) => { steps[name] = Math.round(performance.now() - from); return performance.now(); };

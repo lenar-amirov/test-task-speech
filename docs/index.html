@@ -132,6 +132,14 @@
   .match { margin-top: 12px; font-size: 13.5px; display: flex; gap: 8px; align-items: flex-start; }
   .consent { margin-top: 10px; max-width: 46ch; }
   .borderline { margin-top: 10px; font-size: 13.5px; }
+  .appeal { margin-top: 16px; padding-top: 14px; border-top: 1px solid #333; }
+  .appeal-q { font-weight: 700; margin-bottom: 8px; }
+  .appeal-note { margin-bottom: 10px; font-size: 14px; }
+  .appeal .small { margin-top: 8px; }
+  .appeal button { background: var(--lime); color: var(--ink); border: 0; cursor: pointer; font: inherit; font-weight: 700; padding: 10px 18px; border-radius: var(--r-pill); }
+  .appeal button:disabled { opacity: .7; cursor: default; }
+  .appeal-note svg { width: 16px; height: 16px; vertical-align: -3px; margin-right: 6px; }
+  .card.server .appeal button .left { color: var(--ink-2); font-weight: 600; }
   .match svg { width: 16px; height: 16px; flex: none; margin-top: 2px; }
   .empty { color: var(--muted); }
   table { border-collapse: collapse; width: 100%; font-size: 13.5px; font-variant-numeric: tabular-nums; }
@@ -376,8 +384,8 @@
           <li>Subtle cheating: cutting 20–30% of the recording (about a third of the words) is caught 55 times in 60 (92%), and a person listening to borderline cases raises that to 59. Skipping one to three words was not measured and probably passes. Reading a Kazakh sentence in Russian (40 of 40) and light clipping (60 of 60) were all caught.</li>
           <li>Kazakh is the weak language: 4 of 49 good Kazakh recordings were rejected (8%), two of them for a pause at the end just over the 4-second limit. Trimming trailing silence before the check is the next fix.</li>
           <li>FLEURS is read in quiet rooms. A car, a cheap microphone and free speech will be harder. The free conversation task here runs on demo rules that have not been measured yet.</li>
-          <li>Fraud: the same file sent twice is caught. Replaying someone else's recording, text-to-speech and two accounts sharing one voice are not caught yet; they need speaker and synthetic-voice checks. In this demo the page sends the sentence it showed; in the app the server would look it up by task id, so it cannot be swapped.</li>
-          <li>Fairness: if 2% of submissions are bad, about two out of three rejections land on honest contributors. The app needs a one-tap "this is a mistake" that sends the recording to a person, and contributors whose disputes keep winning get their recordings re-checked.</li>
+          <li>Fraud: the same file sent twice is caught. "One person, one recording", age and gender quotas and children's consent come from the ID checks inDrive already runs on drivers and passengers, not from the audio. Replaying someone else's voice and text-to-speech are not caught yet; they need speaker and synthetic-voice checks. In this demo the page sends the sentence it showed; in the app the server would look it up by task id, so it cannot be swapped.</li>
+          <li>Fairness: if 2% of submissions are bad, about two out of three rejections land on honest contributors. So every rejection has a way out: check the same recording again (up to two times), and if it is still rejected, send it to a person. Try it on any rejected recording above.</li>
         </ul>
       </div>
       <div>
@@ -622,13 +630,15 @@ async function handle(buf) {
   form.append('audio', wav, 'rec.wav'); form.append('lang', lang); form.append('prompt', prompt()); form.append('scenario', scen); form.append('task', task);
   const key = task + '|' + prompt(), attempt = (attempts.get(key) || 0) + 1; attempts.set(key, attempt);
   form.append('phone', JSON.stringify({ accept: phone.accept, reasons: phone.reasons, source, attempt }));
+  const post = async (f) => {
+    let rr, jj;
+    try { rr = await fetch(`${CFG.supabaseUrl}/functions/v1/qc-check`, { method: 'POST', headers: { Authorization: `Bearer ${CFG.anonKey}`, apikey: CFG.anonKey }, body: f }); jj = await rr.json(); }
+    catch (e) { jj = { error: 'The server did not answer' }; }
+    return [rr, jj];
+  };
   const t1 = performance.now();
   ['signal', 'storage', 'asr', 'decision', 'log'].forEach(n => node(n, 'active'));
-  let r, j;
-  try {
-    r = await fetch(`${CFG.supabaseUrl}/functions/v1/qc-check`, { method: 'POST', headers: { Authorization: `Bearer ${CFG.anonKey}`, apikey: CFG.anonKey }, body: form });
-    j = await r.json();
-  } catch (e) { j = { error: 'The server did not answer' }; }
+  let [r, j] = await post(form);
   const rtt = Math.round(performance.now() - t1);
   if (!r || !r.ok || j.error) {
     ['upload', 'signal', 'storage', 'asr', 'decision', 'log'].forEach(n => node(n, 'fail'));
@@ -649,7 +659,50 @@ async function handle(buf) {
       <div><b class="num">${(j.usable_s || 0).toFixed(1)} s</b><span>speech we pay for</span></div>
       <div><b class="num">${(rtt / 1000).toFixed(1)} s</b><span>round trip</span></div>
     </div>
-    ${s.expect ? `<p class="match">${match ? ICON.check + 'That is what this case should get.' : ICON.x + 'Not what this case should get. Misses like this are what the measured error rates count.'}</p>` : ''}`;
+    ${s.expect ? `<p class="match">${match ? ICON.check + 'That is what this case should get.' : ICON.x + 'Not what this case should get. Misses like this are what the measured error rates count.'}</p>` : ''}
+    <div id="appeal"></div>`;
+  if (!j.accept && !(j.reasons || []).includes('duplicate recording')) appeal(j.id, wav, form);
+}
+
+// Appeal: a rejected contributor can ask for two more checks of the same recording; if both say no, they can send it to a person.
+const MAX_RECHECKS = 2;
+function appeal(origId, wav, firstForm) {
+  let used = 0;
+  const box = () => $('appeal');
+  const call = async (f) => {
+    try { const r = await fetch(`${CFG.supabaseUrl}/functions/v1/qc-check`, { method: 'POST', headers: { Authorization: `Bearer ${CFG.anonKey}`, apikey: CFG.anonKey }, body: f }); return await r.json(); }
+    catch { return { error: 'The server did not answer' }; }
+  };
+  const draw = (note) => {
+    if (!box()) return;
+    const left = MAX_RECHECKS - used;
+    box().innerHTML = `<div class="appeal">
+      ${note ? `<p class="appeal-note">${note}</p>` : ''}
+      ${left > 0
+        ? `<p class="appeal-q">Think the check got it wrong?</p><button type="button" class="pill" id="recheck">Check again <span class="left">(${left} left)</span></button>`
+        : `<p class="appeal-q">Still sure you read it right?</p><button type="button" class="pill" id="dispute">Send it to a person</button><p class="small muted">A person listens within a day. If they accept it, you are paid as usual.</p>`}
+    </div>`;
+    const rb = $('recheck'), db = $('dispute');
+    if (rb) rb.onclick = async () => {
+      rb.disabled = true; rb.textContent = 'Checking…';
+      const f = new FormData();
+      for (const [k, v] of firstForm.entries()) if (k !== 'audio') f.append(k, v);
+      f.append('audio', wav, 'rec.wav'); f.append('recheck_of', String(origId));
+      const j = await call(f);
+      if (j.error) { draw(esc(j.error)); return; }
+      used++;
+      if (j.accept) { box().innerHTML = `<div class="appeal"><p class="appeal-note">${ICON.check} Second look: <b>accepted</b>. Heard: <i dir="auto">${esc(j.transcript || '')}</i></p></div>`; exitOn('bad', false); exitOn('ok'); return; }
+      draw(`Re-check ${used}: still <b>re-record</b> (${esc(reasonText(j.reasons))}). Heard: <i dir="auto">${esc(j.transcript || '(nothing)')}</i>`);
+    };
+    if (db) db.onclick = async () => {
+      db.disabled = true; db.textContent = 'Sending…';
+      const f = new FormData(); f.append('action', 'dispute'); f.append('id', String(origId));
+      const j = await call(f);
+      box().innerHTML = `<div class="appeal"><p class="appeal-note">${j.error ? esc(j.error) : ICON.check + ' Sent to a person (check #' + origId + '). In the app you would get the answer within a day.'}</p></div>`;
+      if (!j.error) exitOn('mid');
+    };
+  };
+  draw('');
 }
 
 </script>

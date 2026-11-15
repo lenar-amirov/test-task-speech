@@ -2,6 +2,8 @@
 // Phone uploads a 16 kHz WAV + the prompt it showed. We re-run the signal checks (never trust the phone),
 // store the recording, run Whisper for language + transcript, compare with the prompt, log the decision, return the verdict.
 // Also: the same recording uploaded twice is rejected, and stored recordings are deleted after 30 days.
+// Appeals: a rejected contributor may ask for up to MAX_RECHECKS re-checks of the same recording; if those are negative too,
+// they can send it to a person (action=dispute), which marks the row for human review.
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
 import postgres from "npm:postgres@3.4.4";
 import { analyzeSignal, decodeWav, freeVerdict, pcmSha256, TH, verdict } from "./qc.ts";
@@ -12,6 +14,7 @@ const MAX_BYTES = 2_200_000; // ~65 s of 16 kHz 16-bit mono
 const MAX_SECONDS = 65;
 const PER_IP_PER_HOUR = 40;
 const KEEP_DAYS = 30; // demo retention: recordings older than this are deleted
+const MAX_RECHECKS = 2;
 // The demo's own sample files (hashed as the page uploads them) may be checked again and again; any other repeat is a duplicate.
 const SAMPLE_HASHES = new Set(["46ccb5f2e535b7e9", "5311bbd285e98cc5", "c93b536cd95b56ae", "8f63e873fa611970", "ca0e949e7c4eb32d", "36c88b20861517e6", "33910e4ae8294633", "8da880df678c08db", "5e9e8b84047a90c4", "a2df6b6da2eff967"]);
 const SAMPLE_PROMPTS = new Set(["Compartir una excursión en forma virtual también es una excelente forma de reflexionar sobre una salida y compartir experiencias con clases futuras.", "Durante esta fase de la historia de Europa, la iglesia católica, que había acumulado riqueza y poder, fue cuestionada.", "En efecto, es muy difícil de encontrar, incluso si uno estuviera seguro de su existencia. En el interior de la cueva, el aislamiento es total.", "La incorporación de durmientes para mantener a los rieles en su lugar se produjo bastante temprano. No obstante, paulatinamente, fueron dándose cuenta de que los rieles resultarían más eficientes si estuvieran revestidos de hierro en su parte superior.", "Uno de los periodos más sanguinarios de la historia de Antigua China fue el de Los Tres Reinos, donde miles de personas murieron en una lucha por ocupar el trono del gran palacio en Xi'an.", "Баспанасыз балалар тастап кеткенге немесе қашып кеткенге дейін балаларға қарсы зорлық-зомбылықты көрген немесе жанжарақатын алған болуы мүмкін.", "Ең оңай қол жеткізуге болаты өсімдік ресурстарына жапырақтар мен бұршақтарда қолжетімді ақуыздар болды, бірақ әзірлемесе, олар біз сияқты приматтар үшін қорытуға қиын.", "Ол бізге пойызды, автокөлікті және басқа да көлік құралдарын алып келді.", "بالی میں دیگر ایجنڈے میں دنیا کے باقی ماندہ جنگلات کا تحفظ، اور کم آلودگی کے طریقے سے ترقی کرنے کیلئے ترقی پذیر ممالک کے ساتھ ٹیکنالوجز کا اشتراک کرنے کا موضوع شامل کیا گیا۔", "سندربن دنیا کا سب سے بڑا ساحلی مینگروو بیلٹ ہے، جو ساحلی علاقے سے بنگلادیشی اور ہندوستان کے دور افتادہ پسماندہ علاقے میں 80 کیلو میٹر (50 میل) تک پھیلا ہوا ہے۔"]);
@@ -60,6 +63,19 @@ Deno.serve(async (req) => {
     const prompt = String(form.get("prompt") ?? "").slice(0, 400);
     const scenario = String(form.get("scenario") ?? "").slice(0, 40);
     const task = String(form.get("task") ?? "read") === "free" ? "free" : "read";
+    // Appeal, step 2: after the re-checks also said no, the contributor sends the recording to a person.
+    if (String(form.get("action") ?? "") === "dispute") {
+      const id = Number(form.get("id"));
+      if (!Number.isInteger(id)) return json({ error: "id missing" }, 400);
+      const ipD = await sha256((req.headers.get("x-forwarded-for") ?? "").split(",")[0].trim() + (Deno.env.get("IP_SALT") ?? "qc"));
+      const [orig] = await sql`select id, accept, ip_hash from qc.checks where id = ${id}`;
+      if (!orig || orig.ip_hash !== ipD) return json({ error: "Only the person who sent this recording can dispute it." }, 403);
+      const [{ n, ok }] = await sql`select count(*)::int as n, bool_or(accept) as ok from qc.checks where signal->>'recheck_of' = ${String(id)}`;
+      if (orig.accept || ok) return json({ error: "This recording was accepted; nothing to dispute." }, 409);
+      if (n < MAX_RECHECKS) return json({ error: "Check it again first." }, 409);
+      await sql`update qc.checks set signal = signal || ${sql.json({ dispute: "requested", dispute_at: new Date().toISOString() })} where id = ${id}`;
+      return json({ id, dispute: "requested" });
+    }
     let phone: unknown = null;
     try { phone = JSON.parse(String(form.get("phone") ?? "null")); } catch { phone = null; }
     if (!(file instanceof File)) return json({ error: "audio missing" }, 400);
@@ -88,7 +104,18 @@ Deno.serve(async (req) => {
     // list alone is not enough; the page marks them, and the mark only counts with one of the samples' own sentences.
     // (Demo only: production has no samples, so no exemption at all.)
     const isSample = SAMPLE_HASHES.has(hash.slice(0, 16)) || (scenario.startsWith("sample_") && SAMPLE_PROMPTS.has(prompt));
-    if (!isSample) {
+    // Appeal, step 1: "check again" on a rejected recording. Same file, same sender, at most MAX_RECHECKS times.
+    const recheckOf = form.get("recheck_of") ? Number(form.get("recheck_of")) : null;
+    let reusePath: string | null = null;
+    if (recheckOf !== null) {
+      const [orig] = await sql`select id, accept, ip_hash, audio_path, signal->>'sha256' as sha from qc.checks where id = ${recheckOf}`;
+      if (!orig || orig.sha !== hash || orig.ip_hash !== ipHash) return json({ error: "Only the same recording from the same sender can be checked again." }, 403);
+      if (orig.accept) return json({ error: "This recording was already accepted." }, 409);
+      const [{ n: done }] = await sql`select count(*)::int as n from qc.checks where signal->>'recheck_of' = ${String(recheckOf)}`;
+      if (done >= MAX_RECHECKS) return json({ error: "Both re-checks are used. You can send it to a person.", rechecks_left: 0 }, 409);
+      reusePath = orig.audio_path;
+    }
+    if (!isSample && recheckOf === null) {
       const [dup] = await sql`select id from qc.checks where signal->>'sha256' = ${hash} limit 1`;
       if (dup) {
         const reasons = ["duplicate recording"];
@@ -101,9 +128,12 @@ Deno.serve(async (req) => {
     }
 
     // 2) keep the recording (buyers audit samples; disputes need the original)
-    const path = `${new Date().toISOString().slice(0, 10)}/${crypto.randomUUID()}.wav`;
-    const up = await db.storage.from("qc-recordings").upload(path, wav, { contentType: "audio/wav" });
-    if (up.error) throw new Error(`storage: ${up.error.message}`);
+    let path = reusePath;
+    if (!path) {
+      path = `${new Date().toISOString().slice(0, 10)}/${crypto.randomUUID()}.wav`;
+      const up = await db.storage.from("qc-recordings").upload(path, wav, { contentType: "audio/wav" });
+      if (up.error) throw new Error(`storage: ${up.error.message}`);
+    }
     t = lap("storage", t);
 
     // 3) speech recognition: which language, which words
@@ -117,7 +147,7 @@ Deno.serve(async (req) => {
     // 5) log every decision: this table is what the buyer report and threshold tuning are built from
     const row = {
       lang, scenario, prompt, transcript: asr.text, detected_lang: asr.language, cer: v.cer,
-      signal: sql.json({ ...sig, sha256: hash, borderline: v.borderline }), phone: sql.json(phone as never), accept: v.accept, reasons: v.reasons, usable_s: v.usable_s,
+      signal: sql.json({ ...sig, sha256: hash, borderline: v.borderline, ...(recheckOf !== null ? { recheck_of: String(recheckOf) } : {}) }), phone: sql.json(phone as never), accept: v.accept, reasons: v.reasons, usable_s: v.usable_s,
       asr_model: ASR_MODEL, audio_path: path, ip_hash: ipHash,
     };
     const [ins] = await sql`insert into qc.checks ${sql(row as Record<string, unknown>)} returning id, created_at`;
@@ -128,7 +158,8 @@ Deno.serve(async (req) => {
     steps.total = Math.round(performance.now() - t0);
 
     return json({ id: ins.id, created_at: ins.created_at, accept: v.accept, reasons: v.reasons, usable_s: v.usable_s,
-      cer: v.cer, words: v.words, task, transcript: asr.text, detected_lang: asr.language, signal: sig, asr_model: ASR_MODEL, borderline: v.borderline, steps });
+      cer: v.cer, words: v.words, task, transcript: asr.text, detected_lang: asr.language, signal: sig, asr_model: ASR_MODEL, borderline: v.borderline,
+      recheck_of: recheckOf, steps });
   } catch (e) {
     console.error(e);
     return json({ error: String((e as Error).message ?? e) }, 500);

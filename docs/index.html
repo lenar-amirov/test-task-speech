@@ -106,6 +106,10 @@
   .card { border: 1px solid var(--line); border-radius: var(--r-card); padding: 20px; background: var(--sheet); }
   .card.server { background: var(--ink); color: #fff; border-color: var(--ink); }
   .card.server .muted { color: #b9b9b9; }
+  .checked { padding-bottom: 16px; margin-bottom: 16px; border-bottom: 1px solid #333; }
+  .checked-label { font-size: 12px; color: #b9b9b9; text-transform: uppercase; letter-spacing: .04em; font-weight: 700; }
+  .checked-text { margin: 4px 0 12px; font-size: 16px; line-height: 1.45; font-weight: 600; }
+  .checked audio { display: block; width: 100%; margin-top: 6px; color-scheme: dark; }
   .card h3 { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
   .card h3 small { font-size: 12.5px; font-weight: 600; color: var(--muted); }
   .card.server h3 small { color: #b9b9b9; }
@@ -527,11 +531,19 @@ async function handle(buf) {
   const wav = wavFrom(x), url = URL.createObjectURL(wav);
   const s = findScen(scen), taskNow = task, langNow = lang;
   const showOut = () => { const r = out.getBoundingClientRect(); if (r.top > innerHeight * 0.6 || r.bottom < 0) out.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }); };
-  out.innerHTML = `<div class="card server" id="srv"><h3>Verdict <small>${esc(s.label)}</small></h3><p class="muted" style="margin-top:8px">Listening…</p></div>
+  const asked = prompt();
+  out.innerHTML = `<div class="card server">
+      <div class="checked">
+        <p class="checked-label">${taskNow === 'free' ? 'The task' : 'Asked to read'}</p>
+        <p class="checked-text" lang="${langNow}" dir="auto">${esc(asked)}</p>
+        <p class="checked-label">${source === 'sample' ? 'The sample recording' : 'Your recording'}</p>
+        <audio controls preload="metadata" src="${url}"></audio>
+      </div>
+      <div id="srv"><h3>Verdict <small>${esc(s.label)}</small></h3><p class="muted" style="margin-top:8px">Listening…</p></div>
+    </div>
     <details class="more"><summary>Details: the instant phone check and the measurements</summary>
       <p class="small muted">The phone checks the sound before anything is uploaded. Here it said: ${phone.accept ? 'accept' : 're-record (' + esc(reasonText(phone.reasons)) + ')'}. ${phone.accept ? '' : 'In the app the contributor would re-record at this point; here the recording goes on to the server so you can see the full check.'} The verdict above is the server's, which also listens for the words.</p>
-      ${sigTable(sig)}
-      <audio controls src="${url}"></audio></details>`;
+      ${sigTable(sig)}</details>`;
   showOut();
   if (!CFG.supabaseUrl || !CFG.anonKey) { $('srv').innerHTML = `<h3>Verdict <small>phone check only</small></h3><div class="vline">${badge(phone.accept)} <span>${esc(reasonText(phone.reasons))}</span></div><p class="muted" style="margin-top:8px">No server on this copy of the page, so the words were not checked.</p>`; return; }
 

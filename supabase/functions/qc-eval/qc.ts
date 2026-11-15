@@ -11,12 +11,14 @@ export type Thresholds = {
   max_edge_silence_s: number; max_gap_s: number; max_cer: Record<string, number>;
 };
 
-// Frozen values from eval/results/results.json (tuned on the build set before the fresh-set check).
-// English and Russian are demo languages: they reuse the Spanish text limit and are not part of the measured results.
+// Signal limits: frozen from eval/results/results.json (build set, before the fresh-set check).
+// Text limits (max_cer): re-tuned on the deployed Whisper large-v3 with the dev-split tuning set
+// (eval/tune_text.py -> eval/results/text_limits.json), frozen before re-running the fresh and hard sets.
+// English and Russian are demo languages, not part of the measured results; they keep the old 0.25.
 export const TH: Thresholds = {
   min_speech_ratio: 0.35, chars_per_s: 14.0, max_clip_ratio: 0.001, min_speech_dbfs: -42.0, min_snr_db: 10,
   max_edge_silence_s: 4.0, max_gap_s: 3.0,
-  max_cer: { es: 0.25, kk: 0.55, ur: 0.35, en: 0.25, ru: 0.25 },
+  max_cer: { es: 0.15, kk: 0.25, ur: 0.25, en: 0.25, ru: 0.25 },
 };
 
 const SR = 16000, FRAME = 480, HOP = 160;

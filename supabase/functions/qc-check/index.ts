@@ -14,6 +14,7 @@ const PER_IP_PER_HOUR = 40;
 const KEEP_DAYS = 30; // demo retention: recordings older than this are deleted
 // The demo's own sample files (hashed as the page uploads them) may be checked again and again; any other repeat is a duplicate.
 const SAMPLE_HASHES = new Set(["46ccb5f2e535b7e9", "5311bbd285e98cc5", "c93b536cd95b56ae", "8f63e873fa611970", "ca0e949e7c4eb32d", "36c88b20861517e6", "33910e4ae8294633", "8da880df678c08db", "5e9e8b84047a90c4", "a2df6b6da2eff967"]);
+const SAMPLE_PROMPTS = new Set(["Compartir una excursión en forma virtual también es una excelente forma de reflexionar sobre una salida y compartir experiencias con clases futuras.", "Durante esta fase de la historia de Europa, la iglesia católica, que había acumulado riqueza y poder, fue cuestionada.", "En efecto, es muy difícil de encontrar, incluso si uno estuviera seguro de su existencia. En el interior de la cueva, el aislamiento es total.", "La incorporación de durmientes para mantener a los rieles en su lugar se produjo bastante temprano. No obstante, paulatinamente, fueron dándose cuenta de que los rieles resultarían más eficientes si estuvieran revestidos de hierro en su parte superior.", "Uno de los periodos más sanguinarios de la historia de Antigua China fue el de Los Tres Reinos, donde miles de personas murieron en una lucha por ocupar el trono del gran palacio en Xi'an.", "Баспанасыз балалар тастап кеткенге немесе қашып кеткенге дейін балаларға қарсы зорлық-зомбылықты көрген немесе жанжарақатын алған болуы мүмкін.", "Ең оңай қол жеткізуге болаты өсімдік ресурстарына жапырақтар мен бұршақтарда қолжетімді ақуыздар болды, бірақ әзірлемесе, олар біз сияқты приматтар үшін қорытуға қиын.", "Ол бізге пойызды, автокөлікті және басқа да көлік құралдарын алып келді.", "بالی میں دیگر ایجنڈے میں دنیا کے باقی ماندہ جنگلات کا تحفظ، اور کم آلودگی کے طریقے سے ترقی کرنے کیلئے ترقی پذیر ممالک کے ساتھ ٹیکنالوجز کا اشتراک کرنے کا موضوع شامل کیا گیا۔", "سندربن دنیا کا سب سے بڑا ساحلی مینگروو بیلٹ ہے، جو ساحلی علاقے سے بنگلادیشی اور ہندوستان کے دور افتادہ پسماندہ علاقے میں 80 کیلو میٹر (50 میل) تک پھیلا ہوا ہے۔"]);
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -83,9 +84,10 @@ Deno.serve(async (req) => {
     t = lap("signal", t);
 
     // 1b) the same recording sent again (resubmitted for double pay, or shared between accounts)
-    // Demo samples are meant to be clicked again and again: the page marks them (scenario "sample_..."), and browsers
-    // re-encode them slightly differently, so the hash list alone is not enough.
-    const isSample = scenario.startsWith("sample_") || SAMPLE_HASHES.has(hash.slice(0, 16));
+    // Demo samples are meant to be clicked again and again. Browsers re-encode them slightly differently, so the hash
+    // list alone is not enough; the page marks them, and the mark only counts with one of the samples' own sentences.
+    // (Demo only: production has no samples, so no exemption at all.)
+    const isSample = SAMPLE_HASHES.has(hash.slice(0, 16)) || (scenario.startsWith("sample_") && SAMPLE_PROMPTS.has(prompt));
     if (!isSample) {
       const [dup] = await sql`select id from qc.checks where signal->>'sha256' = ${hash} limit 1`;
       if (dup) {

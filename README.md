@@ -45,4 +45,4 @@ and accepted recordings are packed into buyer batches that must stay under the b
 
 - Measured on planted defects in real recordings, not on real buyer decisions.
 - FLEURS is read in quiet rooms; car noise, phone microphones and spontaneous speech will be harder.
-- The live server uses Whisper large-v3 (hosted), not Whisper small used in the measurement.
+- The text limits were first tuned on Whisper small; they are being re-tuned on the deployed Whisper large-v3 (dev split of FLEURS, kept apart from the measured sets).

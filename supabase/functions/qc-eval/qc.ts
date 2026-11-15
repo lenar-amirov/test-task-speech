@@ -109,13 +109,37 @@ export function analyzeSignal(x: Float32Array): Signal {
     clip_ratio: x.length ? clip / x.length : 0, speech_dbfs: speechDb, noise_dbfs: noiseDb, snr_db: speechDb - noiseDb };
 }
 
+/** Edge silence is cut, not rejected: keep EDGE_KEEP_S before the first and after the last speech. The checks run on
+ * the full recording (more silence gives a better noise estimate); the trimmed file is what gets stored and shipped. */
+export const EDGE_KEEP_S = 0.5;
+export function trimEdges(x: Float32Array, sig: Signal): { x: Float32Array; cut_s: number } {
+  if (sig.speech_s <= 0) return { x, cut_s: 0 };
+  const start = Math.max(0, Math.floor((sig.lead_silence_s - EDGE_KEEP_S) * SR));
+  const endCut = Math.max(0, Math.floor((sig.trail_silence_s - EDGE_KEEP_S) * SR));
+  if (!start && !endCut) return { x, cut_s: 0 };
+  return { x: x.slice(start, x.length - endCut), cut_s: (start + endCut) / SR };
+}
+
+/** 16 kHz mono 16-bit WAV. */
+export function encodeWav(x: Float32Array): Uint8Array {
+  const buf = new Uint8Array(44 + x.length * 2), dv = new DataView(buf.buffer);
+  const put = (o: number, s: string) => { for (let i = 0; i < 4; i++) buf[o + i] = s.charCodeAt(i); };
+  put(0, "RIFF"); dv.setUint32(4, 36 + x.length * 2, true); put(8, "WAVE"); put(12, "fmt ");
+  dv.setUint32(16, 16, true); dv.setUint16(20, 1, true); dv.setUint16(22, 1, true); dv.setUint32(24, SR, true);
+  dv.setUint32(28, SR * 2, true); dv.setUint16(32, 2, true); dv.setUint16(34, 16, true); put(36, "data");
+  dv.setUint32(40, x.length * 2, true);
+  for (let i = 0; i < x.length; i++) dv.setInt16(44 + 2 * i, Math.max(-32768, Math.min(32767, Math.round(x[i] * 32768))), true);
+  return buf;
+}
+
 export function signalReasons(sig: Signal, prompt: string, th: Thresholds = TH): string[] {
   const reasons: string[] = [], expected = Math.max(1, prompt.length / th.chars_per_s);
   if (sig.speech_s < th.min_speech_ratio * expected) reasons.push("too short or cut off");
   if (sig.clip_ratio > th.max_clip_ratio) reasons.push("clipping");
   if (sig.speech_dbfs < th.min_speech_dbfs) reasons.push("too quiet");
   if (sig.snr_db < th.min_snr_db) reasons.push("too noisy");
-  if (sig.lead_silence_s > th.max_edge_silence_s || sig.trail_silence_s > th.max_edge_silence_s || sig.max_gap_s > th.max_gap_s) reasons.push("long silence");
+  // Silence at the start or end is trimmed off the delivered file (trimEdges), so it never rejects; only a long pause inside does.
+  if (sig.max_gap_s > th.max_gap_s) reasons.push("long silence");
   return reasons;
 }
 
@@ -210,7 +234,7 @@ export function freeVerdict(sig: Signal, lang: string, asr: { language: string; 
   if (sig.clip_ratio > th.max_clip_ratio) reasons.push("clipping");
   if (sig.speech_dbfs < th.min_speech_dbfs) reasons.push("too quiet");
   if (sig.snr_db < th.min_snr_db) reasons.push("too noisy");
-  if (sig.lead_silence_s > th.max_edge_silence_s || sig.trail_silence_s > th.max_edge_silence_s || sig.max_gap_s > FREE.max_gap_s) reasons.push("long silence");
+  if (sig.max_gap_s > FREE.max_gap_s) reasons.push("long silence");
   let words = 0;
   if (asr) {
     words = normalize(asr.text).split(" ").filter(Boolean).length;

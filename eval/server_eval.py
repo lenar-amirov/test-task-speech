@@ -11,7 +11,7 @@ import soundfile as sf
 import requests
 
 URL = "https://cpsdihiwdbaccxoowzht.supabase.co/functions/v1/qc-eval"
-KEY = os.environ["SUPABASE_ANON_KEY"]   # the public key, same one the demo page ships
+KEY = os.environ.get("SUPABASE_ANON_KEY", "")   # the public key, same one the demo page ships
 PACE_S = float(os.environ.get("PACE_S", "4"))
 SPLITS = os.environ.get("SPLITS", "fresh,hard").split(",")   # dev = the tuning set (dev_set.py)
 
@@ -51,15 +51,26 @@ def check(item, path):
     raise RuntimeError(f"{item['id']}: gave up after retries")
 
 
+def fixed_by_trim(r):
+    """Planted edge silence (5-8 s before or after the speech) is cut off the delivered file, not rejected: an accepted
+    one ships as a good recording, so it counts as handled."""
+    return r["label"] == "reject" and r["variant"] == "long_silence" and r["accept"]
+
+
+def handled(r):
+    return (not r["accept"]) or fixed_by_trim(r)
+
+
 def summarize(rows):
     out = {}
     for split in sorted({r["split_set"] for r in rows}):
         rs = [r for r in rows if r["split_set"] == split]
         bad = [r for r in rs if r["label"] == "reject"]
         good = [r for r in rs if r["label"] == "accept"]
-        caught = sum(not r["accept"] for r in bad)
+        caught = sum(handled(r) for r in bad)
         wrong = sum(not r["accept"] for r in good)
-        s = {"n": len(rs), "bad": len(bad), "caught": caught, "recall": round(caught / len(bad), 4) if bad else None,
+        s = {"n": len(rs), "bad": len(bad), "caught": caught, "rejected": sum(not r["accept"] for r in bad),
+             "fixed_by_trim": sum(fixed_by_trim(r) for r in bad), "recall": round(caught / len(bad), 4) if bad else None,
              "recall_ci95": wilson(caught, len(bad)),
              "good": len(good), "wrongly_rejected": wrong,
              "false_reject_rate": round(wrong / len(good), 4) if good else None,
@@ -72,12 +83,12 @@ def summarize(rows):
                 k = r[key]
                 g.setdefault(k, {"n": 0, "right": 0})
                 g[k]["n"] += 1
-                g[k]["right"] += int((not r["accept"]) == (r["label"] == "reject"))
+                g[k]["right"] += int(handled(r) == (r["label"] == "reject"))
             by[key] = g
         s["by_variant"], s["by_language"] = by["variant"], by["lang"]
         s["errors"] = [{"id": r["id"], "variant": r["variant"], "label": r["label"], "reasons": r["reasons"],
                         "cer": r["cer"], "detected_lang": r["detected_lang"], "transcript": r["transcript"][:160]}
-                       for r in rs if (not r["accept"]) != (r["label"] == "reject")]
+                       for r in rs if handled(r) != (r["label"] == "reject")]
         out[split] = s
     return out
 
@@ -104,6 +115,7 @@ def main(data, out_jsonl, summary):
                 print(f"{split} {i + 1}/{len(items)} {it['id']} {it['label']} -> {'accept' if v['accept'] else 'reject'} {v['reasons']}", flush=True)
                 time.sleep(max(0, PACE_S - (time.time() - t)))
     s = summarize(list(done.values()))
+    s["edge_silence"] = "trimmed, not rejected: only a pause inside the recording longer than max_gap_s rejects; caught = rejected + fixed_by_trim"
     s["thresholds"] = "signal limits frozen (eval/results/results.json), text limits re-tuned on the dev set and frozen (eval/results/text_limits.json); server copy in app/supabase/functions/qc-check/qc.ts"
     json.dump(s, open(summary, "w"), indent=2, ensure_ascii=False)
     print(json.dumps({k: {kk: v[kk] for kk in ("n", "caught", "bad", "recall", "recall_ci95", "wrongly_rejected", "good",

@@ -1,12 +1,13 @@
 // qc-check: the server half of speech auto-QC.
 // Phone uploads a 16 kHz WAV + the prompt it showed. We re-run the signal checks (never trust the phone),
 // store the recording, run Whisper for language + transcript, compare with the prompt, log the decision, return the verdict.
-// Also: the same recording uploaded twice is rejected, and stored recordings are deleted after 30 days.
+// Also: the same recording uploaded twice is rejected, silence at the edges is cut off the stored file instead of
+// rejecting it, and stored recordings are deleted after 30 days.
 // Appeals: a rejected contributor may ask for up to MAX_RECHECKS re-checks of the same recording; if those are negative too,
 // they can send it to a person (action=dispute), which marks the row for human review.
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
 import postgres from "npm:postgres@3.4.4";
-import { analyzeSignal, decodeWav, freeVerdict, pcmSha256, TH, verdict } from "./qc.ts";
+import { analyzeSignal, decodeWav, encodeWav, freeVerdict, pcmSha256, TH, trimEdges, verdict } from "./qc.ts";
 import { ASR_MODEL, transcribe } from "./asr.ts";
 
 const LANGS = new Set(["en", "ru", "es", "kk", "ur"]);
@@ -135,11 +136,13 @@ Deno.serve(async (req) => {
       }
     }
 
-    // 2) keep the recording (buyers audit samples; disputes need the original)
+    // 2) keep the recording (buyers audit samples; disputes need the original), with silence at the edges cut off:
+    // that is the file a buyer would get, so edge silence is fixed here instead of rejected
+    const trim = trimEdges(x, sig);
     let path = reusePath;
     if (!path) {
       path = `${new Date().toISOString().slice(0, 10)}/${crypto.randomUUID()}.wav`;
-      const up = await db.storage.from("qc-recordings").upload(path, wav, { contentType: "audio/wav" });
+      const up = await db.storage.from("qc-recordings").upload(path, trim.cut_s ? encodeWav(trim.x) : wav, { contentType: "audio/wav" });
       if (up.error) throw new Error(`storage: ${up.error.message}`);
     }
     t = lap("storage", t);
@@ -155,7 +158,7 @@ Deno.serve(async (req) => {
     // 5) log every decision: this table is what the buyer report and threshold tuning are built from
     const row = {
       lang, scenario, prompt, transcript: asr.text, detected_lang: asr.language, cer: v.cer,
-      signal: sql.json({ ...sig, sha256: hash, borderline: v.borderline, ...(recheckOf !== null ? { recheck_of: String(recheckOf) } : {}) }), phone: sql.json(phone as never), accept: v.accept, reasons: v.reasons, usable_s: v.usable_s,
+      signal: sql.json({ ...sig, sha256: hash, borderline: v.borderline, trimmed_s: Math.round(trim.cut_s * 100) / 100, ...(recheckOf !== null ? { recheck_of: String(recheckOf) } : {}) }), phone: sql.json(phone as never), accept: v.accept, reasons: v.reasons, usable_s: v.usable_s,
       asr_model: ASR_MODEL, audio_path: path, ip_hash: ipHash,
     };
     const [ins] = await sql`insert into qc.checks ${sql(row as Record<string, unknown>)} returning id, created_at`;

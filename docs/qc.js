@@ -72,6 +72,7 @@ function checkSignal(sig, prompt, th) {
   if (sig.clip_ratio > th.max_clip_ratio) reasons.push('clipping');
   if (sig.speech_dbfs < th.min_speech_dbfs) reasons.push('too quiet');
   if (sig.snr_db < th.min_snr_db) reasons.push('too noisy');
-  if (sig.lead_silence_s > th.max_edge_silence_s || sig.trail_silence_s > th.max_edge_silence_s || sig.max_gap_s > th.max_gap_s) reasons.push('long silence');
+  // Silence at the start or end is trimmed on the server, so only a long pause inside rejects.
+  if (sig.max_gap_s > th.max_gap_s) reasons.push('long silence');
   return { accept: !reasons.length, reasons, usable_s: reasons.length ? 0 : sig.speech_s };
 }

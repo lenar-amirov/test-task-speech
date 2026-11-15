@@ -1,0 +1,301 @@
+{
+  "fresh": {
+    "n": 300,
+    "bad": 150,
+    "caught": 143,
+    "recall": 0.9533,
+    "recall_ci95": [
+      0.9068,
+      0.9772
+    ],
+    "good": 150,
+    "wrongly_rejected": 6,
+    "false_reject_rate": 0.04,
+    "false_reject_ci95": [
+      0.0185,
+      0.0845
+    ],
+    "borderline_flagged": 5,
+    "by_variant": {
+      "mild_noise": {
+        "n": 29,
+        "right": 26
+      },
+      "clean": {
+        "n": 107,
+        "right": 105
+      },
+      "cut_off": {
+        "n": 24,
+        "right": 24
+      },
+      "clipping": {
+        "n": 25,
+        "right": 25
+      },
+      "heavy_noise": {
+        "n": 25,
+        "right": 18
+      },
+      "quieter": {
+        "n": 14,
+        "right": 13
+      },
+      "wrong_text": {
+        "n": 34,
+        "right": 34
+      },
+      "wrong_language": {
+        "n": 25,
+        "right": 25
+      },
+      "too_quiet": {
+        "n": 15,
+        "right": 15
+      },
+      "long_silence": {
+        "n": 2,
+        "right": 2
+      }
+    },
+    "by_language": {
+      "es": {
+        "n": 100,
+        "right": 96
+      },
+      "kk": {
+        "n": 100,
+        "right": 92
+      },
+      "ur": {
+        "n": 100,
+        "right": 99
+      }
+    },
+    "errors": [
+      {
+        "id": "es_007.wav",
+        "variant": "heavy_noise",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.008064516129032258,
+        "detected_lang": "Spanish",
+        "transcript": "La Vía Láctea influye en la galaxia de Sagitario del mismo modo en que la Luna ejerce una fuerza de atracción sobre nuestro planeta y causa las mareas."
+      },
+      {
+        "id": "es_084.wav",
+        "variant": "heavy_noise",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0,
+        "detected_lang": "Spanish",
+        "transcript": "El uso masivo de automóviles también genera una mayor incidencia en los accidentes de tránsito, lo que conduce al desarrollo de nuevas técnicas en el campo de l"
+      },
+      {
+        "id": "es_092.wav",
+        "variant": "heavy_noise",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.02,
+        "detected_lang": "Spanish",
+        "transcript": "Este es el sitio que los conquistadores británicos adoptaron como propio. Por ello, si desea ver pruebas de un pasado colonial de esta región, es un sitio conve"
+      },
+      {
+        "id": "es_098.wav",
+        "variant": "clean",
+        "label": "accept",
+        "reasons": [
+          "does not match the prompt"
+        ],
+        "cer": 0.23711340206185566,
+        "detected_lang": "Spanish",
+        "transcript": "El día de ayer Martelly juró en un nuevo Consejo Electoral Provisional de nueve miembros."
+      },
+      {
+        "id": "kk_002.wav",
+        "variant": "mild_noise",
+        "label": "accept",
+        "reasons": [
+          "does not match the prompt"
+        ],
+        "cer": 0.34523809523809523,
+        "detected_lang": "Kazakh",
+        "transcript": "Бұр түн үшінде 150-200 кейін көшірмелер жасалып, олар қазір дұнылап бұрылдысайды сүретінде белгілі."
+      },
+      {
+        "id": "kk_029.wav",
+        "variant": "mild_noise",
+        "label": "accept",
+        "reasons": [
+          "long silence"
+        ],
+        "cer": 0.02631578947368421,
+        "detected_lang": "Kazakh",
+        "transcript": "Оливер Сакс өзінің президенттің сөзі деген мақаласында мейдің зақымдануы салдарынан сөзді түсінбейтін адамдар соған қарамастан шынайлықты қалай бағалай алатыны "
+      },
+      {
+        "id": "kk_030.wav",
+        "variant": "mild_noise",
+        "label": "accept",
+        "reasons": [
+          "does not match the prompt"
+        ],
+        "cer": 0.25203252032520324,
+        "detected_lang": "Kazakh",
+        "transcript": "Мысырлықтар біздің дәуірімізге дейінгі 3-ші қасырда соққан ұлы пирамида, Қадис болған фергавының құрметіне соғалған көп үлкен пирамида құрылымдарының біреуейді."
+      },
+      {
+        "id": "kk_031.wav",
+        "variant": "heavy_noise",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.18556701030927836,
+        "detected_lang": "Kazakh",
+        "transcript": "Үйқының ұзылуы қалыпты үйқы кезеңді мақсатпен ойанылдың және кейінерек қысқа уақытта 16 минут үйқтау процесі."
+      },
+      {
+        "id": "kk_047.wav",
+        "variant": "heavy_noise",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.1588785046728972,
+        "detected_lang": "Kazakh",
+        "transcript": "Олардың қабыршықтары мен тұрнақтары бар аяқтары бар. Олар жұмырқылайды, және оларден ана жабырсыяқты екі аққа аяғында түйеді."
+      },
+      {
+        "id": "kk_058.wav",
+        "variant": "heavy_noise",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.1875,
+        "detected_lang": "Kazakh",
+        "transcript": "Лакшы Сингх Чхаппан Пхок елу алты деген ті білдіреді. Өленің өлені ұсынды. Ол әнті әнші Раджу Қандель Бадырмен бірге орында да."
+      },
+      {
+        "id": "kk_060.wav",
+        "variant": "quieter",
+        "label": "accept",
+        "reasons": [
+          "long silence"
+        ],
+        "cer": 0.06748466257668712,
+        "detected_lang": "Kazakh",
+        "transcript": "Жалпы алғымды менеджерлер бұрынғы әріптестеріне басшылғы ете бастағымды екі түрлі қылық пайда болуы мүмкін. Бір жағынан алдыңы әріптестердің бірі немесе қырбыла"
+      },
+      {
+        "id": "kk_066.wav",
+        "variant": "heavy_noise",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.22727272727272727,
+        "detected_lang": "Kazakh",
+        "transcript": "Оны бейтке француздар бейлеген, ол 1440 жылы неместермен дейітпелзім жасашқан, тені соққырдың орнына жаулаушыларымен бірге жүністеген француздар болды."
+      },
+      {
+        "id": "ur_078.wav",
+        "variant": "clean",
+        "label": "accept",
+        "reasons": [
+          "does not match the prompt"
+        ],
+        "cer": 0.27184466019417475,
+        "detected_lang": "Urdu",
+        "transcript": "جس عہد میں یہ اوقات پیش آئے اسے عام طور پر گیارویں بارویں اور تیرویں صدی میں یورپی تاریخ عہد کا قرون وستی کہا جاتا ہے"
+      }
+    ]
+  },
+  "hard": {
+    "n": 160,
+    "bad": 160,
+    "caught": 155,
+    "recall": 0.9688,
+    "recall_ci95": [
+      0.9289,
+      0.9866
+    ],
+    "good": 0,
+    "wrongly_rejected": 0,
+    "false_reject_rate": null,
+    "false_reject_ci95": [
+      null,
+      null
+    ],
+    "borderline_flagged": 10,
+    "by_variant": {
+      "skipped_words": {
+        "n": 60,
+        "right": 55
+      },
+      "mild_clipping": {
+        "n": 60,
+        "right": 60
+      },
+      "kk_read_in_russian": {
+        "n": 40,
+        "right": 40
+      }
+    },
+    "by_language": {
+      "es": {
+        "n": 40,
+        "right": 40
+      },
+      "kk": {
+        "n": 80,
+        "right": 78
+      },
+      "ur": {
+        "n": 40,
+        "right": 37
+      }
+    },
+    "errors": [
+      {
+        "id": "hard_kk_006.wav",
+        "variant": "skipped_words",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.25,
+        "detected_lang": "Kazakh",
+        "transcript": "Сонда яқын болыңыз қауырсындарының эволюциясыны көрініс береді."
+      },
+      {
+        "id": "hard_kk_012.wav",
+        "variant": "skipped_words",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.23333333333333334,
+        "detected_lang": "Kazakh",
+        "transcript": "Дел Патро, екінші соққыды ерте басымдылығы алтыға жеткеннен кейін тай брейкты қажет етті."
+      },
+      {
+        "id": "hard_ur_002.wav",
+        "variant": "skipped_words",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.19130434782608696,
+        "detected_lang": "Urdu",
+        "transcript": "عالمی پیمانے پر قیمت بچانے اور کام کے عوامل کو مدنظر رکھتے ہوئے ای کمپیوٹر 2017 کے تائی پے آئی ٹی ماہ میں موضوع بحث بن گیا"
+      },
+      {
+        "id": "hard_ur_007.wav",
+        "variant": "skipped_words",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.24761904761904763,
+        "detected_lang": "Urdu",
+        "transcript": "خاص طور پر یہ دعویٰ کیا جاتا ہے کہ ایک شخص معلوم کر سکتا ہے کہ آپ سے پیش کرتے ہوئے جھوٹ تو نہیں بول رہا ہے"
+      },
+      {
+        "id": "hard_ur_011.wav",
+        "variant": "skipped_words",
+        "label": "reject",
+        "reasons": [],
+        "cer": 0.23880597014925373,
+        "detected_lang": "Hindi",
+        "transcript": "1920 کے دوران زیادہ تو شہریوں اور کون پسندی اور تنہائی پسندی تھی"
+      }
+    ]
+  },
+  "thresholds": "signal limits frozen (eval/results/results.json), text limits re-tuned on the dev set and frozen (eval/results/text_limits.json); server copy in app/supabase/functions/qc-check/qc.ts"
+}

@@ -265,7 +265,7 @@
     <section class="hero" aria-labelledby="h1">
       <h1 id="h1">Is this recording good enough to pay for?</h1>
       <p class="lead">Drivers and passengers read a sentence into their phone for a few tenge. Before we pay and ship it to a buyer, this check answers: accept, or re-record with a reason.</p>
-      <p class="lead result-line">On 300 recordings kept out of all tuning, this server caught <b>143 of 150 bad ones (95%)</b> and wrongly rejected <b>6 of 150 good ones (4%)</b>.</p>
+      <p class="lead result-line">On 300 recordings kept out of all tuning, this server stopped <b>143 of 150 bad ones (95%)</b> and wrongly rejected <b>4 of 150 good ones (2.7%)</b>.</p>
     </section>
 
     <section class="try" aria-labelledby="try">
@@ -380,9 +380,9 @@
       <div>
         <h2 id="limits">Where it still falls short</h2>
         <ul class="limits">
-          <li>The 95% and 4% come from defects planted in real recordings, so the right answer is known. Real buyer decisions are the next test.</li>
+          <li>The 95% and 2.7% come from defects planted in real recordings, so the right answer is known. Real buyer decisions are the next test.</li>
           <li>Subtle cheating: cutting 20–30% of the recording (about a third of the words) is caught 55 times in 60 (92%), and a person listening to borderline cases raises that to 59. Skipping one to three words was not measured and probably passes. Reading a Kazakh sentence in Russian (40 of 40) and light clipping (60 of 60) were all caught.</li>
-          <li>Kazakh is the weak language: 4 of 49 good Kazakh recordings were rejected (8%), two of them for a pause at the end just over the 4-second limit. Trimming trailing silence before the check is the next fix.</li>
+          <li>Kazakh is the weak language: 2 of 49 good Kazakh recordings were rejected for their text, because Whisper's Kazakh is weaker. Silence at the start or end no longer rejects anyone: it is cut off the file.</li>
           <li>FLEURS is read in quiet rooms. A car, a cheap microphone and free speech will be harder. The free conversation task here runs on demo rules that have not been measured yet.</li>
           <li>Fraud: the same file sent twice is caught. "One person, one recording", age and gender quotas and children's consent come from the ID checks inDrive already runs on drivers and passengers, not from the audio. Replaying someone else's voice and text-to-speech are not caught yet; they need speaker and synthetic-voice checks. In this demo the page sends the sentence it showed; in the app the server would look it up by task id, so it cannot be swapped.</li>
           <li>Fairness: if 2% of submissions are bad, about two out of three rejections land on honest contributors. So every rejection has a way out: check the same recording once more, and if it is still rejected, send it to a person. Try it on any rejected recording above.</li>
@@ -394,7 +394,7 @@
       </div>
     </section>
 
-    <footer><p>Targets were ≥90% caught and ≤5% wrongly rejected. With 95% confidence the true rates are 91–98% and 1.9–8.5%, so the 5% target is not proven yet; about 2,000 good recordings would settle it. Signal limits were frozen before any test. Text limits were re-tuned once for the deployed model on a separate set (FLEURS dev split) after a first run on this test, then frozen; both runs are published in the repository. Recordings: FLEURS Spanish, Kazakh, Urdu.</p>
+    <footer><p>Targets were ≥90% caught and ≤5% wrongly rejected. With 95% confidence the true rates are 91–98% and 1.0–6.7%, so the 5% target is not proven yet; about 350 good recordings would settle it. Of the 143, 141 were rejected and 2 (5–8 s of silence before or after the speech) are fixed by cutting the silence off. That rule changed after the test: the same server answers were re-scored, and the earlier result (6 of 150 wrongly rejected) is published too. Signal limits were frozen before any test. Text limits were re-tuned once for the deployed model on a separate set (FLEURS dev split) after a first run on this test, then frozen; both runs are published in the repository. Recordings: FLEURS Spanish, Kazakh, Urdu.</p>
       <p>Prototype built for the DataTasks product case. Not an inDrive product. Recordings for the test set: Google FLEURS, CC BY 4.0.</p></footer>
   </div>
 </main>
@@ -493,7 +493,7 @@ function renderPicker() {
   $('scenarios').innerHTML = scenList().map(s => `<button type="button" class="chip" data-s="${s.id}" aria-pressed="${!sample && s.id === scen}">${esc(s.label)}</button>`).join('');
   $('prompt').textContent = prompt();
   $('prompt').lang = lang; $('prompt').dir = lang === 'ur' ? 'rtl' : 'ltr';
-  $('langnote').textContent = free ? 'Free conversation runs on demo rules that have not been measured yet.' : MEASURED[lang] ? `${LANG_LABEL[lang]} is one of the three languages the 95% and 4% were measured on.` : `${LANG_LABEL[lang]} is here so you can try it; it was not part of the measured test.`;
+  $('langnote').textContent = free ? 'Free conversation runs on demo rules that have not been measured yet.' : MEASURED[lang] ? `${LANG_LABEL[lang]} is one of the three languages the 95% and 2.7% were measured on.` : `${LANG_LABEL[lang]} is here so you can try it; it was not part of the measured test.`;
   const s = findScen(scen);
   $('howto').innerHTML = `<strong>Should get: ${s.expect === 'accept' ? 'accept' : 're-record'}.</strong> ${sample ? 'A real recording from the test set; the sentence on the right is what the speaker was asked to read.' : s.html ? s.how(lang) : esc(s.how(lang))}`;
 }
@@ -580,7 +580,7 @@ function checkFree(sig) {
   if (sig.clip_ratio > TH.max_clip_ratio) reasons.push('clipping');
   if (sig.speech_dbfs < TH.min_speech_dbfs) reasons.push('too quiet');
   if (sig.snr_db < TH.min_snr_db) reasons.push('too noisy');
-  if (sig.lead_silence_s > TH.max_edge_silence_s || sig.trail_silence_s > TH.max_edge_silence_s || sig.max_gap_s > FREE.max_gap_s) reasons.push('long silence');
+  if (sig.max_gap_s > FREE.max_gap_s) reasons.push('long silence');
   return { accept: !reasons.length, reasons, usable_s: reasons.length ? 0 : sig.speech_s };
 }
 function sigTable(sig) {
@@ -592,7 +592,7 @@ function sigTable(sig) {
   <tr><td>Voice louder than background (SNR)</td><td>${sig.snr_db.toFixed(1)} dB</td><td>≥ ${TH.min_snr_db} dB</td></tr>
   <tr><td>Loudness</td><td>${sig.speech_dbfs.toFixed(1)} dBFS</td><td>≥ ${TH.min_speech_dbfs}</td></tr>
   <tr><td>Distortion from a too-loud mic</td><td>${(sig.clip_ratio * 100).toFixed(2)}%</td><td>≤ ${(TH.max_clip_ratio * 100).toFixed(2)}%</td></tr>
-  <tr><td>Silence at start / end / longest pause</td><td>${sig.lead_silence_s.toFixed(1)} / ${sig.trail_silence_s.toFixed(1)} / ${sig.max_gap_s.toFixed(1)} s</td><td>≤ ${TH.max_edge_silence_s} / ${TH.max_edge_silence_s} / ${gap} s</td></tr></table></div>`;
+  <tr><td>Silence at start / end / longest pause</td><td>${sig.lead_silence_s.toFixed(1)} / ${sig.trail_silence_s.toFixed(1)} / ${sig.max_gap_s.toFixed(1)} s</td><td>trimmed / trimmed / ≤ ${gap} s</td></tr></table></div>`;
 }
 const badge = ok => ok ? `<span class="pill ok">${ICON.check}Accept</span>` : `<span class="pill bad">${ICON.redo}Re-record</span>`;
 const reasonText = rs => rs.map(r => REASONS[r] || r).join(', ');

@@ -3,23 +3,25 @@
     "n": 300,
     "bad": 150,
     "caught": 143,
+    "rejected": 141,
+    "fixed_by_trim": 2,
     "recall": 0.9533,
     "recall_ci95": [
       0.9068,
       0.9772
     ],
     "good": 150,
-    "wrongly_rejected": 6,
-    "false_reject_rate": 0.04,
+    "wrongly_rejected": 4,
+    "false_reject_rate": 0.0267,
     "false_reject_ci95": [
-      0.0185,
-      0.0845
+      0.0104,
+      0.0666
     ],
     "borderline_flagged": 5,
     "by_variant": {
       "mild_noise": {
         "n": 29,
-        "right": 26
+        "right": 27
       },
       "clean": {
         "n": 107,
@@ -39,7 +41,7 @@
       },
       "quieter": {
         "n": 14,
-        "right": 13
+        "right": 14
       },
       "wrong_text": {
         "n": 34,
@@ -65,7 +67,7 @@
       },
       "kk": {
         "n": 100,
-        "right": 92
+        "right": 94
       },
       "ur": {
         "n": 100,
@@ -123,17 +125,6 @@
         "transcript": "Бұр түн үшінде 150-200 кейін көшірмелер жасалып, олар қазір дұнылап бұрылдысайды сүретінде белгілі."
       },
       {
-        "id": "kk_029.wav",
-        "variant": "mild_noise",
-        "label": "accept",
-        "reasons": [
-          "long silence"
-        ],
-        "cer": 0.02631578947368421,
-        "detected_lang": "Kazakh",
-        "transcript": "Оливер Сакс өзінің президенттің сөзі деген мақаласында мейдің зақымдануы салдарынан сөзді түсінбейтін адамдар соған қарамастан шынайлықты қалай бағалай алатыны "
-      },
-      {
         "id": "kk_030.wav",
         "variant": "mild_noise",
         "label": "accept",
@@ -172,17 +163,6 @@
         "transcript": "Лакшы Сингх Чхаппан Пхок елу алты деген ті білдіреді. Өленің өлені ұсынды. Ол әнті әнші Раджу Қандель Бадырмен бірге орында да."
       },
       {
-        "id": "kk_060.wav",
-        "variant": "quieter",
-        "label": "accept",
-        "reasons": [
-          "long silence"
-        ],
-        "cer": 0.06748466257668712,
-        "detected_lang": "Kazakh",
-        "transcript": "Жалпы алғымды менеджерлер бұрынғы әріптестеріне басшылғы ете бастағымды екі түрлі қылық пайда болуы мүмкін. Бір жағынан алдыңы әріптестердің бірі немесе қырбыла"
-      },
-      {
         "id": "kk_066.wav",
         "variant": "heavy_noise",
         "label": "reject",
@@ -208,6 +188,8 @@
     "n": 160,
     "bad": 160,
     "caught": 155,
+    "rejected": 155,
+    "fixed_by_trim": 0,
     "recall": 0.9688,
     "recall_ci95": [
       0.9289,
@@ -297,5 +279,7 @@
       }
     ]
   },
+  "edge_silence": "trimmed, not rejected: only a pause inside the recording longer than 3 s rejects; caught = rejected + fixed_by_trim",
+  "source": "re-scored from results/server_rows_before_trim.jsonl (live-server rows) by rescore_edge_trim.py",
   "thresholds": "signal limits frozen (eval/results/results.json), text limits re-tuned on the dev set and frozen (eval/results/text_limits.json); server copy in app/supabase/functions/qc-check/qc.ts"
 }

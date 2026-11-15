@@ -173,11 +173,12 @@
   .exit.mid.on { background: var(--warn-bg); border-color: #e0b400; }
   .x2 { grid-column: 2 / 4; grid-row: 3; margin-top: 22px; align-self: start; }
   .x2::before, .exits::before { content: ""; position: absolute; top: -22px; left: 24px; width: 2px; height: 22px; background: var(--bad); }
-  .exits { grid-column: 4 / 7; grid-row: 3; margin-top: 22px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; position: relative; }
+  .exits { grid-column: 4 / 7; grid-row: 3; margin-top: 22px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--gap); position: relative; }
   /* bracket: Decide drops down, then fans out to all three outcomes */
-  .exits::before { top: -22px; height: 11px; left: auto; right: calc((100% - 20px) / 6); background: var(--ink); }
-  .exits::after { content: ""; position: absolute; top: -11px; height: 2px; left: calc((100% - 20px) / 6); right: calc((100% - 20px) / 6); background: var(--ink); }
-  .exits .exit::before { content: ""; position: absolute; top: -11px; left: 50%; width: 2px; height: 11px; background: var(--ink); }
+  /* each outcome sits under its own server column, so the drop from Decide lines up with the last branch */
+  .exits::before { top: -22px; height: 11px; left: auto; right: calc((100% - 2 * var(--gap)) / 6 - 1px); background: var(--ink); }
+  .exits::after { content: ""; position: absolute; top: -11px; height: 2px; left: calc((100% - 2 * var(--gap)) / 6 - 1px); right: calc((100% - 2 * var(--gap)) / 6 - 1px); background: var(--ink); }
+  .exits .exit::before { content: ""; position: absolute; top: -11px; left: calc(50% - 1px); width: 2px; height: 11px; background: var(--ink); }
   .scale { margin-top: 16px; color: var(--ink-2); max-width: 80ch; }
   code { font: 600 0.92em ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--tile); padding: 1px 6px; border-radius: 6px; }
 
@@ -205,7 +206,7 @@
     .x2::after { content: ""; position: absolute; left: -20px; top: -18px; bottom: -18px; width: 2px; background: var(--ink); }
     .exits::after { top: -18px; bottom: 26px; left: -16px; right: auto; width: 2px; height: auto; }
     .exits .exit::before { top: 50%; left: -16px; width: 16px; height: 2px; }
-    .exits { grid-template-columns: 1fr; }
+    .exits { grid-template-columns: 1fr; gap: 10px; }
     .setup { padding: 20px; gap: 22px; }
     .stage { padding: 22px 20px; }
     .recbtn { width: 76px; height: 76px; }

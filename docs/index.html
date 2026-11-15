@@ -139,12 +139,12 @@
 
   /* how it works: one rail, phone to server, exits hang under the step they leave from */
   .pipe { --gap: 26px; margin-top: 28px; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); column-gap: var(--gap); row-gap: 0; position: relative; }
-  .lane { grid-row: 1; font-weight: 800; font-size: 13px; letter-spacing: .05em; text-transform: uppercase; padding-bottom: 12px; margin-bottom: 14px; border-bottom: 3px solid var(--ink); }
+  .lane { grid-row: 1; font-weight: 800; font-size: 13px; letter-spacing: .05em; text-transform: uppercase; padding-bottom: 12px; margin-bottom: 34px; border-bottom: 3px solid var(--ink); }
   .lane span { font-weight: 600; letter-spacing: 0; text-transform: none; color: var(--muted); margin-left: 6px; }
   .lane-phone { grid-column: 1 / 4; }
   .lane-srv { grid-column: 4 / 7; }
-  .wire { grid-column: 3 / 5; grid-row: 1; justify-self: center; align-self: end; transform: translateY(50%); position: relative; z-index: 1; background: var(--sheet); padding: 0 10px; margin-bottom: 14px; }
-  .wire span { display: inline-block; font-size: 12px; font-weight: 700; background: var(--lime); border-radius: var(--r-pill); padding: 3px 10px; white-space: nowrap; }
+  .wire { grid-column: 3 / 5; grid-row: 1; justify-self: center; align-self: end; transform: translateY(50%); position: relative; z-index: 1; background: var(--sheet); padding: 0 14px; margin-bottom: 34px; }
+  .wire span { display: inline-block; font-size: 12px; font-weight: 700; background: var(--lime); border-radius: var(--r-pill); padding: 5px 14px; white-space: nowrap; }
   .step { grid-row: 2; position: relative; background: var(--tile); border-radius: 18px; padding: 14px 14px 12px; border: 2px solid transparent; display: flex; flex-direction: column; transition: border-color .25s, background .25s; }
   .step i { font-style: normal; font-weight: 800; font-size: 12px; width: 22px; height: 22px; border-radius: 50%; background: var(--ink); color: #fff; display: grid; place-items: center; margin-bottom: 10px; }
   .step b { font-size: 15px; line-height: 1.25; }

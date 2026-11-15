@@ -14,7 +14,7 @@ const MAX_BYTES = 2_200_000; // ~65 s of 16 kHz 16-bit mono
 const MAX_SECONDS = 65;
 const PER_IP_PER_HOUR = 40;
 const KEEP_DAYS = 30; // demo retention: recordings older than this are deleted
-const MAX_RECHECKS = 2;
+const MAX_RECHECKS = 1;
 // The demo's own sample files (hashed as the page uploads them) may be checked again and again; any other repeat is a duplicate.
 const SAMPLE_HASHES = new Set(["46ccb5f2e535b7e9", "5311bbd285e98cc5", "c93b536cd95b56ae", "8f63e873fa611970", "ca0e949e7c4eb32d", "36c88b20861517e6", "33910e4ae8294633", "8da880df678c08db", "5e9e8b84047a90c4", "a2df6b6da2eff967"]);
 const SAMPLE_PROMPTS = new Set(["Compartir una excursión en forma virtual también es una excelente forma de reflexionar sobre una salida y compartir experiencias con clases futuras.", "Durante esta fase de la historia de Europa, la iglesia católica, que había acumulado riqueza y poder, fue cuestionada.", "En efecto, es muy difícil de encontrar, incluso si uno estuviera seguro de su existencia. En el interior de la cueva, el aislamiento es total.", "La incorporación de durmientes para mantener a los rieles en su lugar se produjo bastante temprano. No obstante, paulatinamente, fueron dándose cuenta de que los rieles resultarían más eficientes si estuvieran revestidos de hierro en su parte superior.", "Uno de los periodos más sanguinarios de la historia de Antigua China fue el de Los Tres Reinos, donde miles de personas murieron en una lucha por ocupar el trono del gran palacio en Xi'an.", "Баспанасыз балалар тастап кеткенге немесе қашып кеткенге дейін балаларға қарсы зорлық-зомбылықты көрген немесе жанжарақатын алған болуы мүмкін.", "Ең оңай қол жеткізуге болаты өсімдік ресурстарына жапырақтар мен бұршақтарда қолжетімді ақуыздар болды, бірақ әзірлемесе, олар біз сияқты приматтар үшін қорытуға қиын.", "Ол бізге пойызды, автокөлікті және басқа да көлік құралдарын алып келді.", "بالی میں دیگر ایجنڈے میں دنیا کے باقی ماندہ جنگلات کا تحفظ، اور کم آلودگی کے طریقے سے ترقی کرنے کیلئے ترقی پذیر ممالک کے ساتھ ٹیکنالوجز کا اشتراک کرنے کا موضوع شامل کیا گیا۔", "سندربن دنیا کا سب سے بڑا ساحلی مینگروو بیلٹ ہے، جو ساحلی علاقے سے بنگلادیشی اور ہندوستان کے دور افتادہ پسماندہ علاقے میں 80 کیلو میٹر (50 میل) تک پھیلا ہوا ہے۔"]);
@@ -112,7 +112,7 @@ Deno.serve(async (req) => {
       if (!orig || orig.sha !== hash || orig.ip_hash !== ipHash) return json({ error: "Only the same recording from the same sender can be checked again." }, 403);
       if (orig.accept) return json({ error: "This recording was already accepted." }, 409);
       const [{ n: done }] = await sql`select count(*)::int as n from qc.checks where signal->>'recheck_of' = ${String(recheckOf)}`;
-      if (done >= MAX_RECHECKS) return json({ error: "Both re-checks are used. You can send it to a person.", rechecks_left: 0 }, 409);
+      if (done >= MAX_RECHECKS) return json({ error: "The re-check is used. You can send it to a person.", rechecks_left: 0 }, 409);
       reusePath = orig.audio_path;
     }
     if (!isSample && recheckOf === null) {

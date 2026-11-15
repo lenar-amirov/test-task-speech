@@ -385,7 +385,7 @@
           <li>Kazakh is the weak language: 4 of 49 good Kazakh recordings were rejected (8%), two of them for a pause at the end just over the 4-second limit. Trimming trailing silence before the check is the next fix.</li>
           <li>FLEURS is read in quiet rooms. A car, a cheap microphone and free speech will be harder. The free conversation task here runs on demo rules that have not been measured yet.</li>
           <li>Fraud: the same file sent twice is caught. "One person, one recording", age and gender quotas and children's consent come from the ID checks inDrive already runs on drivers and passengers, not from the audio. Replaying someone else's voice and text-to-speech are not caught yet; they need speaker and synthetic-voice checks. In this demo the page sends the sentence it showed; in the app the server would look it up by task id, so it cannot be swapped.</li>
-          <li>Fairness: if 2% of submissions are bad, about two out of three rejections land on honest contributors. So every rejection has a way out: check the same recording again (up to two times), and if it is still rejected, send it to a person. Try it on any rejected recording above.</li>
+          <li>Fairness: if 2% of submissions are bad, about two out of three rejections land on honest contributors. So every rejection has a way out: check the same recording once more, and if it is still rejected, send it to a person. Try it on any rejected recording above.</li>
         </ul>
       </div>
       <div>
@@ -664,8 +664,8 @@ async function handle(buf) {
   if (!j.accept && !(j.reasons || []).includes('duplicate recording')) appeal(j.id, wav, form);
 }
 
-// Appeal: a rejected contributor can ask for two more checks of the same recording; if both say no, they can send it to a person.
-const MAX_RECHECKS = 2;
+// Appeal: a rejected contributor can ask for one more check of the same recording; if it says no again, they can send it to a person.
+const MAX_RECHECKS = 1;
 function appeal(origId, wav, firstForm) {
   let used = 0;
   const box = () => $('appeal');
@@ -679,7 +679,7 @@ function appeal(origId, wav, firstForm) {
     box().innerHTML = `<div class="appeal">
       ${note ? `<p class="appeal-note">${note}</p>` : ''}
       ${left > 0
-        ? `<p class="appeal-q">Think the check got it wrong?</p><button type="button" class="pill" id="recheck">Check again <span class="left">(${left} left)</span></button>`
+        ? `<p class="appeal-q">Think the check got it wrong?</p><button type="button" class="pill" id="recheck">Check again</button>`
         : `<p class="appeal-q">Still sure you read it right?</p><button type="button" class="pill" id="dispute">Send it to a person</button><p class="small muted">A person listens within a day. If they accept it, you are paid as usual.</p>`}
     </div>`;
     const rb = $('recheck'), db = $('dispute');
@@ -692,7 +692,7 @@ function appeal(origId, wav, firstForm) {
       if (j.error) { draw(esc(j.error)); return; }
       used++;
       if (j.accept) { box().innerHTML = `<div class="appeal"><p class="appeal-note">${ICON.check} Second look: <b>accepted</b>. Heard: <i dir="auto">${esc(j.transcript || '')}</i></p></div>`; exitOn('bad', false); exitOn('ok'); return; }
-      draw(`Re-check ${used}: still <b>re-record</b> (${esc(reasonText(j.reasons))}). Heard: <i dir="auto">${esc(j.transcript || '(nothing)')}</i>`);
+      draw(`Checked again: still <b>re-record</b> (${esc(reasonText(j.reasons))}). Heard: <i dir="auto">${esc(j.transcript || '(nothing)')}</i>`);
     };
     if (db) db.onclick = async () => {
       db.disabled = true; db.textContent = 'Sending…';

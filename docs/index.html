@@ -163,7 +163,14 @@
   .step.fail { border-color: var(--bad); }
   .exit { position: relative; font-size: 13px; line-height: 1.4; color: var(--ink-2); border-radius: 14px; padding: 9px 12px; }
   .exit b { display: block; font-size: 14px; color: var(--ink); }
-  .exit.ok { background: var(--ok-bg); } .exit.bad { background: var(--bad-bg); } .exit.mid { background: var(--warn-bg); }
+  /* outcomes stay quiet until a recording actually takes that exit */
+  .exit { background: var(--tile); color: var(--muted); border: 2px solid transparent; transition: background .25s, border-color .25s, color .25s; }
+  .exit b { color: var(--muted); }
+  .exit.on b { color: var(--ink); }
+  .exit.on { color: var(--ink-2); }
+  .exit.ok.on { background: var(--ok-bg); border-color: var(--lime-deep); }
+  .exit.bad.on { background: var(--bad-bg); border-color: var(--bad); }
+  .exit.mid.on { background: var(--warn-bg); border-color: #e0b400; }
   .x2 { grid-column: 2 / 4; grid-row: 3; margin-top: 22px; align-self: start; }
   .x2::before, .exits::before { content: ""; position: absolute; top: -22px; left: 24px; width: 2px; height: 22px; background: var(--bad); }
   .exits { grid-column: 4 / 7; grid-row: 3; margin-top: 22px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; position: relative; }
@@ -286,7 +293,7 @@
         <p class="lane lane-phone">On the phone <span>instant, free</span></p>
         <div class="step s1" id="n-rec"><i>1</i><b>Record</b><span class="d">16 kHz mono</span><span class="ms"></span></div>
         <div class="step s2" id="n-phone"><i>2</i><b>Check the sound</b><span class="d">length, pauses, clipping, loudness, noise</span><span class="ms"></span></div>
-        <div class="exit bad x2"><b>Fails</b>re-record now, nothing uploaded</div>
+        <div class="exit bad x2" id="x-fail"><b>Fails</b>re-record now, nothing uploaded</div>
         <div class="step s3" id="n-upload"><i>3</i><b>Upload</b><span class="d">only takes that pass</span><span class="ms"></span></div>
 
         <div class="wire" aria-hidden="true"><span>WAV + the sentence shown</span></div>
@@ -298,9 +305,9 @@
         <div class="step s6" id="n-decision"><i>6</i><b>Decide</b><span class="d">right language, words match the sentence</span><span class="ms"></span>
           <span class="side" id="n-log">Logged for the buyer report<span class="ms"></span></span></div>
         <div class="exits x6">
-          <div class="exit ok"><b>Accept</b>pay, add to a buyer batch</div>
-          <div class="exit bad"><b>Re-record</b>with the reason, right away</div>
-          <div class="exit mid"><b>Borderline</b>a person listens (≤5%)</div>
+          <div class="exit ok" id="x-ok"><b>Accept</b>pay, add to a buyer batch</div>
+          <div class="exit bad" id="x-bad"><b>Re-record</b>with the reason, right away</div>
+          <div class="exit mid" id="x-mid"><b>Borderline</b>a person listens (≤5%)</div>
         </div>
       </div>
       <p class="scale">At scale the same function sits behind a queue. Borderline recordings, at most 5% of volume, go to a person instead of an automatic verdict. Accepted recordings are packed into buyer batches that must stay under the buyer's 10% rejection rule.</p>
@@ -475,7 +482,9 @@ function node(id, state, ms) {
   const el = $('n-' + id); el.classList.remove('active', 'done', 'fail'); if (state) el.classList.add(state);
   el.querySelector('.ms').textContent = ms != null ? `${ms} ms` : '';
 }
-const resetNodes = () => NODES.forEach(n => node(n, null));
+const EXITS = ['fail', 'ok', 'bad', 'mid'];
+const exitOn = (id, on = true) => $('x-' + id).classList.toggle('on', on);
+const resetNodes = () => { NODES.forEach(n => node(n, null)); EXITS.forEach(x => exitOn(x, false)); };
 
 // ---------- recording ----------
 let rec = null, chunks = [], stream = null, tStart = 0, tick = null;
@@ -543,6 +552,7 @@ async function handle(buf) {
   try { x = await decodeTo16k(buf); } catch { out.innerHTML = '<div class="card"><h3>Verdict</h3><p class="empty" style="margin-top:8px">This audio could not be read. Record again, or upload a wav or mp3.</p></div>'; node('phone', 'fail'); return; }
   const sig = analyzeSignal(x), phone = task === 'free' ? checkFree(sig) : checkSignal(sig, prompt(), TH);
   node('phone', phone.accept ? 'done' : 'fail', Math.round(performance.now() - t));
+  exitOn('fail', !phone.accept);
   const wav = wavFrom(x), url = URL.createObjectURL(wav);
   const s = findScen(scen), taskNow = task, langNow = lang;
   const showOut = () => { const r = out.getBoundingClientRect(); if (r.top > innerHeight * 0.6 || r.bottom < 0) out.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }); };
@@ -583,6 +593,7 @@ async function handle(buf) {
   node('upload', 'done', Math.max(0, rtt - (st.total || 0)));
   ['signal', 'storage', 'asr', 'decision', 'log'].forEach(n => node(n, 'done', st[n]));
   if (!j.accept) node('decision', 'fail', st.decision);
+  exitOn(j.accept ? 'ok' : 'bad'); exitOn('mid', !!j.borderline);
   const match = s.expect === (j.accept ? 'accept' : 'reject');
   $('srv').innerHTML = `<h3>Verdict <small>${esc(s.label)} · check #${j.id}</small></h3>
     <div class="vline">${badge(j.accept)} <span>${esc(reasonText(j.reasons))}</span></div>

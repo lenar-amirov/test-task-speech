@@ -167,6 +167,7 @@
   ul.limits li { border-top: 2px solid var(--lime); padding-top: 8px; }
   ul.limits li + li { margin-top: 14px; }
   footer { padding: 28px 0 48px; border-top: 1px solid var(--line); font-size: 13px; color: var(--muted); }
+  footer p + p { margin-top: 8px; }
 
   @media (max-width: 860px) {
     .hero, .two, .studio, .verdicts, .flow, .outcomes { grid-template-columns: 1fr; }
@@ -202,7 +203,6 @@
       <h1 id="h1">Is this recording good enough to pay for?</h1>
       <p class="lead">Drivers and passengers read a sentence into their phone for a few tenge. Before we pay and ship it to a buyer, this check answers: accept, or re-record with a reason.</p>
       <p class="lead result-line">On 300 recordings it had never seen, this server caught <b>143 of 150 bad ones (95%)</b> and wrongly rejected <b>3 of 150 good ones (2%)</b>.</p>
-      <p class="fine">Targets were ≥90% and ≤5%. With 95% confidence the true rates are 91–98% and 0.7–5.7%, so the upper end can still miss the 5% target; a larger test settles it. Recordings: FLEURS Spanish, Kazakh, Urdu.</p>
     </section>
 
     <section class="try" aria-labelledby="try">
@@ -319,7 +319,8 @@
       </div>
     </section>
 
-    <footer>Prototype built for the DataTasks product case. Not an inDrive product. Recordings for the test set: Google FLEURS, CC BY 4.0.</footer>
+    <footer><p>Targets were ≥90% caught and ≤5% wrongly rejected. With 95% confidence the true rates are 91–98% and 0.7–5.7%, so the upper end can still miss the 5% target; a larger test settles it. Recordings: FLEURS Spanish, Kazakh, Urdu.</p>
+      <p>Prototype built for the DataTasks product case. Not an inDrive product. Recordings for the test set: Google FLEURS, CC BY 4.0.</p></footer>
   </div>
 </main>
 

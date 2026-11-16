@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>DataTasks Contributor App</title>
+<meta name="description" content="Prototype of the contributor side: a speech task inside the app, checked live by the same server, with the verdict, the pay and the appeal.">
+<meta name="theme-color" content="#c1f11d">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --lime: #c1f11d; --lime-deep: #a9d80f; --lime-soft: #eefbc4;
+    --ink: #141414; --ink-2: #3d3d3d; --muted: #5a5a5a; --line: #e6e6e6;
+    --sheet: #ffffff; --tile: #f3f3f3; --tile-2: #ebebeb;
+    --ok: #217a1b; --ok-bg: #e4f7c9; --bad: #b42a12; --bad-bg: #fde6df; --warn-bg: #fff6d9;
+    --font: "Montserrat", system-ui, sans-serif;
+    color-scheme: light;
+  }
+  [hidden] { display: none !important; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body { margin: 0; background: var(--lime); color: var(--ink); font: 500 15px/1.5 var(--font); -webkit-font-smoothing: antialiased; }
+  a { color: var(--ink); text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 3px; text-decoration-color: var(--lime-deep); }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  :focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; border-radius: 10px; }
+  h1, h2, h3 { margin: 0; font-weight: 800; letter-spacing: -0.02em; text-wrap: balance; }
+  p { margin: 0; }
+  .num { font-variant-numeric: tabular-nums; }
+
+  /* page: explanation on the left, the app in a phone on the right; on a phone the app is the page */
+  .layout { max-width: 1120px; margin: 0 auto; padding: 32px 20px 48px; display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 56px; align-items: start; }
+  .about { padding-top: 24px; position: sticky; top: 24px; }
+  .brand { font-weight: 800; font-size: 15px; display: inline-flex; gap: 8px; align-items: center; }
+  .brand::before { content: ""; width: 10px; height: 10px; border-radius: 3px; background: var(--ink); }
+  .about h1 { font-size: clamp(32px, 4.4vw, 48px); line-height: 1.06; margin-top: 22px; }
+  .about .lead { font-size: 17px; margin-top: 16px; max-width: 520px; color: var(--ink-2); }
+  .about ul { list-style: none; padding: 0; margin: 26px 0 0; display: grid; gap: 12px; max-width: 520px; }
+  .about li { background: rgba(255,255,255,.55); border-radius: 18px; padding: 14px 16px; font-size: 14.5px; }
+  .about li b { display: block; font-size: 15px; }
+  .about .links { margin-top: 24px; display: flex; flex-wrap: wrap; gap: 10px 18px; font-weight: 700; font-size: 14.5px; }
+
+  .phone { width: 400px; height: 820px; background: var(--ink); border-radius: 56px; padding: 12px; box-shadow: 0 30px 60px -20px rgba(0,0,0,.35); }
+  .screen { position: relative; width: 100%; height: 100%; background: var(--sheet); border-radius: 44px; overflow: hidden; display: flex; flex-direction: column; }
+  .notch { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); width: 110px; height: 30px; border-radius: 20px; background: var(--ink); z-index: 5; }
+  .statusbar { height: 50px; flex: none; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 30px 6px; font-size: 13px; font-weight: 700; }
+
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; gap: 0; padding: 0; }
+    .about { position: static; padding: 24px 16px 28px; order: 2; }
+    .phone { width: 100%; height: auto; min-height: 100dvh; padding: 0; border-radius: 0; box-shadow: none; background: transparent; }
+    .screen { border-radius: 0; min-height: 100dvh; }
+    .notch, .statusbar { display: none; }
+  }
+
+  /* app */
+  .view { flex: 1; overflow-y: auto; padding: 8px 20px 24px; display: flex; flex-direction: column; }
+  .appbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 0 14px; }
+  .appbar h2 { font-size: 22px; }
+  .icon-btn { width: 40px; height: 40px; border-radius: 50%; border: 0; background: var(--tile); display: grid; place-items: center; flex: none; }
+  .icon-btn svg { width: 20px; height: 20px; }
+  .chip { border: 0; background: var(--tile); border-radius: 999px; padding: 8px 14px; font-weight: 700; font-size: 13.5px; display: inline-flex; gap: 6px; align-items: center; }
+  .chip svg { width: 14px; height: 14px; }
+
+  .earn { background: var(--ink); color: #fff; border-radius: 24px; padding: 18px 20px; }
+  .earn small { display: block; font-size: 13px; color: #cfcfcf; font-weight: 600; }
+  .earn b { display: block; font-size: 34px; font-weight: 800; color: var(--lime); letter-spacing: -0.02em; margin-top: 2px; }
+  .earn span { font-size: 13px; color: #cfcfcf; }
+
+  .sec { font-size: 13px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); margin: 22px 0 10px; }
+  .task { background: var(--tile); border-radius: 22px; padding: 16px; display: flex; gap: 14px; align-items: center; width: 100%; border: 0; text-align: left; }
+  .task + .task { margin-top: 10px; }
+  .task .ic { width: 46px; height: 46px; border-radius: 14px; background: var(--lime); display: grid; place-items: center; flex: none; }
+  .task .ic svg { width: 22px; height: 22px; }
+  .task .t { flex: 1; min-width: 0; }
+  .task .t b { display: block; font-size: 16px; }
+  .task .t span { font-size: 13px; color: var(--muted); }
+  .task .pay { font-weight: 800; font-size: 16px; white-space: nowrap; }
+  .task[disabled] { opacity: .55; cursor: default; }
+  .task[disabled] .ic { background: var(--tile-2); }
+  .linkbtn { border: 0; background: none; padding: 10px 0; font-weight: 700; font-size: 14px; text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 3px; text-decoration-color: var(--lime-deep); }
+
+  .hist { list-style: none; padding: 0; margin: 0; }
+  .hist li { display: flex; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+  .hist li:last-child { border-bottom: 0; }
+  .hist .dot { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; flex: none; }
+  .hist .dot svg { width: 15px; height: 15px; }
+  .hist .ok { background: var(--ok-bg); color: var(--ok); } .hist .bad { background: var(--bad-bg); color: var(--bad); } .hist .mid { background: var(--warn-bg); color: #7a5a00; }
+  .hist .w { flex: 1; min-width: 0; }
+  .hist .w span { display: block; color: var(--muted); font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .hist .amt { font-weight: 800; white-space: nowrap; }
+  .empty { color: var(--muted); font-size: 14px; }
+
+  .prompt { background: var(--tile); border-radius: 24px; padding: 22px 20px; font-size: 21px; line-height: 1.4; font-weight: 700; letter-spacing: -0.01em; }
+  .prompt-lbl { font-size: 13px; font-weight: 700; color: var(--muted); margin-bottom: 8px; }
+  .tips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+  .tips span { font-size: 12.5px; font-weight: 600; background: var(--lime-soft); border-radius: 999px; padding: 5px 10px; }
+  .recarea { margin-top: auto; padding-top: 26px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .rec { width: 92px; height: 92px; border-radius: 50%; border: 0; background: var(--lime); display: grid; place-items: center; box-shadow: 0 0 0 8px var(--lime-soft); transition: transform .15s; }
+  .rec svg { width: 36px; height: 36px; }
+  .rec:active { transform: scale(.96); }
+  .rec.on { background: var(--bad); color: #fff; box-shadow: 0 0 0 8px var(--bad-bg); animation: pulse 1.4s infinite; }
+  .rec .sq { width: 28px; height: 28px; border-radius: 6px; background: #fff; }
+  @keyframes pulse { 50% { box-shadow: 0 0 0 14px var(--bad-bg); } }
+  .reclbl { font-weight: 700; font-size: 14px; min-height: 21px; }
+  .micnote { font-size: 13px; color: var(--bad); text-align: center; }
+
+  .center { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 14px; padding: 10px 6px; }
+  .spin { width: 64px; height: 64px; border-radius: 50%; border: 6px solid var(--tile); border-top-color: var(--ink); animation: rot 0.9s linear infinite; }
+  @keyframes rot { to { transform: rotate(360deg); } }
+  .steps { list-style: none; padding: 0; margin: 6px 0 0; display: grid; gap: 8px; text-align: left; }
+  .steps li { display: flex; gap: 10px; align-items: center; font-size: 14px; color: var(--muted); }
+  .steps li::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--tile-2); flex: none; }
+  .steps li.on { color: var(--ink); font-weight: 700; } .steps li.on::before { background: var(--lime-deep); }
+
+  .big { width: 96px; height: 96px; border-radius: 50%; display: grid; place-items: center; }
+  .big svg { width: 46px; height: 46px; }
+  .big.ok { background: var(--lime); } .big.bad { background: var(--bad-bg); color: var(--bad); } .big.mid { background: var(--warn-bg); color: #7a5a00; }
+  .center h2 { font-size: 26px; }
+  .center .sub { color: var(--ink-2); font-size: 15px; max-width: 300px; }
+  .plus { font-size: 30px; font-weight: 800; }
+  .why { background: var(--tile); border-radius: 20px; padding: 14px 16px; text-align: left; width: 100%; }
+  .why b { display: block; font-size: 15px; }
+  .why p { font-size: 14px; color: var(--ink-2); margin-top: 4px; }
+  .heard { font-size: 13px; color: var(--muted); text-align: left; width: 100%; }
+  .heard i { color: var(--ink-2); }
+  .tag { font-size: 12px; font-weight: 700; border-radius: 999px; padding: 4px 10px; background: var(--tile); }
+  .actions { width: 100%; display: grid; gap: 8px; margin-top: 6px; }
+  .btn { border: 0; border-radius: 999px; padding: 15px 18px; font-weight: 800; font-size: 16px; background: var(--lime); width: 100%; }
+  .btn.dark { background: var(--ink); color: #fff; }
+  .btn.ghost { background: var(--tile); }
+  .btn[disabled] { opacity: .6; cursor: default; }
+  .fine { font-size: 12.5px; color: var(--muted); }
+
+  .sheet-bg { position: absolute; inset: 0; background: rgba(0,0,0,.35); z-index: 10; display: flex; align-items: flex-end; }
+  .sheet { background: var(--sheet); width: 100%; border-radius: 28px 28px 0 0; padding: 18px 20px 26px; max-height: 80%; overflow-y: auto; }
+  .sheet h3 { font-size: 18px; margin-bottom: 4px; }
+  .sheet .fine { margin-bottom: 12px; }
+  .opts { display: grid; gap: 8px; }
+  .opt { border: 0; background: var(--tile); border-radius: 16px; padding: 13px 14px; text-align: left; display: flex; justify-content: space-between; gap: 10px; align-items: center; font-weight: 700; font-size: 14.5px; }
+  .opt small { font-weight: 600; color: var(--muted); font-size: 12.5px; }
+  .opt[aria-pressed="true"] { background: var(--lime-soft); box-shadow: inset 0 0 0 2px var(--lime-deep); }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="layout">
+  <section class="about" aria-labelledby="h1">
+    <span class="brand">DataTasks speech check</span>
+    <h1 id="h1">What the contributor sees</h1>
+    <p class="lead">A driver or passenger opens a speech task in the app, reads one sentence and knows in a few seconds whether it is paid. Everything in this phone is live: the same check and server as the <a href="index.html">main page</a>.</p>
+    <ul>
+      <li><b>An answer in seconds, not tomorrow</b>A bad take is re-recorded on the spot, while the person still has the sentence in front of them.</li>
+      <li><b>A reason they can act on</b>Not "rejected", but what to fix: read the whole sentence, find a quieter spot, hold the phone further away.</li>
+      <li><b>A way to push back</b>One "check again", then "send it to a person". If the person accepts it, the task is paid as usual.</li>
+    </ul>
+    <p class="links"><a href="index.html">How the check works and how it was measured</a></p>
+    <p class="fine" style="margin-top:14px;max-width:520px">Sentences in Spanish, Kazakh and Urdu are what the 95% / 2.7% were measured on; English and Russian are here to try it. The 75 ₸ per task is the price in the brief. Recordings are stored for this demo and the audio is deleted after 30 days.</p>
+  </section>
+
+  <div class="phone">
+    <div class="screen" id="screen">
+      <div class="notch" aria-hidden="true"></div>
+      <div class="statusbar" aria-hidden="true"><span class="num" id="clock">9:41</span><span>5G ▮▮▮</span></div>
+      <div class="view" id="view" aria-live="polite"></div>
+    </div>
+  </div>
+</div>
+
+<script src="qc.js"></script>
+<script src="config.js"></script>
+<script>
+const CFG = window.QC_CONFIG || {};
+const TH = { min_speech_ratio: 0.35, chars_per_s: 14.0, max_clip_ratio: 0.001, min_speech_dbfs: -42.0, min_snr_db: 10, max_edge_silence_s: 4.0, max_gap_s: 3.0 };
+const PAY = 75;
+const I = {
+  mic: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>',
+  chat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>',
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  redo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 2.6-6.4M3 4v5h5"/></svg>',
+  person: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>',
+  back: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>',
+  globe: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.2 3 14.8 0 18M12 3c-3 3.2-3 14.8 0 18"/></svg>',
+  play: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>',
+};
+const LANGS = { kk: 'Қазақша', es: 'Español', ur: 'اردو', en: 'English', ru: 'Русский' };
+const LANG_EN = { kk: 'Kazakh', es: 'Spanish', ur: 'Urdu', en: 'English', ru: 'Russian' };
+const PROMPTS = {
+  en: ["Please call me back after six, I am driving to the airport now.", "The driver arrived on time and helped us with the heavy bags.",
+       "Turn left at the next corner and stop near the green pharmacy.", "We usually order a taxi when it rains in the evening."],
+  ru: ["Перезвоните мне после шести, я сейчас еду в аэропорт.", "Водитель приехал вовремя и помог нам с тяжёлыми сумками.",
+       "На следующем перекрёстке поверните налево и остановитесь у аптеки.", "Вечером в дождь мы обычно заказываем такси."],
+  es: ["Por favor, llámame después de las seis, ahora voy al aeropuerto.", "El conductor llegó a tiempo y nos ayudó con las maletas pesadas.",
+       "En la próxima esquina gire a la izquierda y pare junto a la farmacia.", "Cuando llueve por la tarde, normalmente pedimos un taxi."],
+  kk: ["Маған алтыдан кейін қоңырау шалыңызшы, мен қазір әуежайға бара жатырмын.", "Жүргізуші уақытында келіп, ауыр сөмкелерімізді көтеруге көмектесті.",
+       "Келесі қиылыстан солға бұрылып, дәріхананың жанына тоқтаңыз.", "Кешке жаңбыр жауғанда біз әдетте такси шақырамыз."],
+  ur: ["براہ کرم چھ بجے کے بعد مجھے فون کریں، میں ابھی ایئرپورٹ جا رہا ہوں۔", "ڈرائیور وقت پر پہنچا اور بھاری بیگ اٹھانے میں ہماری مدد کی۔",
+       "اگلے موڑ سے بائیں مڑیں اور دوا خانے کے پاس رک جائیں۔", "شام کو بارش ہو تو ہم عام طور پر ٹیکسی منگواتے ہیں۔"],
+};
+// What a contributor is told: what went wrong, and what to do differently.
+const FIX = {
+  "too short or cut off": ["The recording stops too early", "Read the whole sentence, then tap stop."],
+  "clipping": ["Too loud: the sound is distorted", "Hold the phone a little further away, about 20 cm."],
+  "too quiet": ["We could barely hear you", "Speak at your normal volume, phone about 20 cm away."],
+  "too noisy": ["Too much noise around you", "Find a quieter spot: close the window, turn off music."],
+  "long silence": ["There is a long pause in the middle", "Read the sentence without stopping for long."],
+  "wrong language": ["This doesn't sound like {L}", "Read the sentence in {L}, as written."],
+  "does not match the prompt": ["The words don't match the sentence", "Read exactly what is on the screen, word for word."],
+  "duplicate recording": ["This exact recording was already sent", "Each task needs a new recording."],
+};
+const SAMPLES = [
+  { file: 'clean_es.wav', label: 'Read well', lang: 'es' },
+  { file: 'clean_kk.wav', label: 'Read well', lang: 'kk' },
+  { file: 'clean_ur.wav', label: 'Read well', lang: 'ur' },
+  { file: 'mild_noise_es.wav', label: 'Some background talk', lang: 'es' },
+  { file: 'wrong_text_es.wav', label: 'Read a different sentence', lang: 'es' },
+  { file: 'cut_off_kk.wav', label: 'Stopped halfway', lang: 'kk' },
+  { file: 'heavy_noise_es.wav', label: 'Heavy noise', lang: 'es' },
+  { file: 'clipping_es.wav', label: 'Too loud', lang: 'es' },
+  { file: 'wrong_language_ur.wav', label: 'Another language', lang: 'ur' },
+];
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const view = $('view');
+const state = { lang: 'en', pi: 0, earned: 0, accepted: 0, sent: 0, hist: [], sample: null };
+let META = null;
+const prompt = () => state.sample ? state.sample.prompt : PROMPTS[state.lang][state.pi % PROMPTS[state.lang].length];
+const tick = () => { const d = new Date(); $('clock').textContent = d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0'); };
+tick(); setInterval(tick, 30000);
+
+// ---------- screens ----------
+function home() {
+  state.sample = null;
+  view.innerHTML = `
+    <div class="appbar"><h2>Tasks</h2><button class="chip" id="langbtn" aria-label="Recording language">${I.globe}${esc(LANGS[state.lang])}</button></div>
+    <div class="earn"><small>Earned today</small><b class="num">${state.earned} ₸</b><span class="num">${state.accepted} accepted · ${state.sent} sent</span></div>
+    <p class="sec">For you</p>
+    <button class="task" id="go-read"><span class="ic">${I.mic}</span><span class="t"><b>Read a sentence</b><span>${esc(LANG_EN[state.lang])} · about 10 seconds</span></span><span class="pay">${PAY} ₸</span></button>
+    <button class="task" disabled><span class="ic">${I.chat}</span><span class="t"><b>Talk freely</b><span>Coming soon · 30 seconds</span></span><span class="pay">—</span></button>
+    <button class="linkbtn" id="go-sample" style="align-self:flex-start">No microphone? Use a ready recording</button>
+    <p class="sec">Today</p>
+    ${state.hist.length ? `<ul class="hist">${state.hist.slice().reverse().map(h => `<li><span class="dot ${h.k}">${h.k === 'ok' ? I.check : h.k === 'mid' ? I.person : I.redo}</span><span class="w">${esc(h.title)}<span dir="auto">${esc(h.text)}</span></span><span class="amt">${h.amt}</span></li>`).join('')}</ul>` : '<p class="empty">Nothing yet. Your recordings and their status will show here.</p>'}`;
+  $('langbtn').onclick = langSheet;
+  $('go-read').onclick = () => taskView();
+  $('go-sample').onclick = sampleSheet;
+}
+
+function sheet(html, bind) {
+  const bg = document.createElement('div'); bg.className = 'sheet-bg';
+  bg.innerHTML = `<div class="sheet" role="dialog" aria-modal="true">${html}</div>`;
+  bg.onclick = e => { if (e.target === bg) bg.remove(); };
+  $('screen').appendChild(bg); bind(bg);
+  bg.querySelector('button')?.focus();
+}
+function langSheet() {
+  sheet(`<h3>Recording language</h3><p class="fine">Spanish, Kazakh and Urdu were measured; English and Russian are here to try it.</p>
+    <div class="opts">${Object.keys(LANGS).map(k => `<button class="opt" data-l="${k}" aria-pressed="${k === state.lang}"><span dir="auto">${esc(LANGS[k])}</span><small>${['es', 'kk', 'ur'].includes(k) ? 'measured' : 'try it'}</small></button>`).join('')}</div>`,
+    bg => bg.querySelectorAll('[data-l]').forEach(b => b.onclick = () => { state.lang = b.dataset.l; state.pi = 0; bg.remove(); home(); }));
+}
+function sampleSheet() {
+  sheet(`<h3>Use a ready recording</h3><p class="fine">Real speakers from Google FLEURS, some with a defect added. The check runs on the server exactly as for your voice.</p>
+    <div class="opts">${SAMPLES.map((s, i) => `<button class="opt" data-s="${i}"><span>${esc(s.label)}</span><small>${esc(LANG_EN[s.lang])}</small></button>`).join('')}</div>`,
+    bg => bg.querySelectorAll('[data-s]').forEach(b => b.onclick = async () => { b.disabled = true; await runSample(SAMPLES[+b.dataset.s]); bg.remove(); }));
+}
+
+function taskView() {
+  const s = state.sample;
+  const lang = s ? s.lang : state.lang;
+  view.innerHTML = `
+    <div class="appbar"><button class="icon-btn" id="back" aria-label="Back">${I.back}</button><h2 style="flex:1">Read a sentence</h2><span class="pay" style="font-weight:800">${PAY} ₸</span></div>
+    <p class="prompt-lbl">Read aloud in ${esc(LANG_EN[lang])}</p>
+    <div class="prompt" lang="${lang}" dir="auto">${esc(prompt())}</div>
+    <div class="tips"><span>Quiet place</span><span>Phone about 20 cm away</span><span>Read it all</span></div>
+    ${s ? '' : '<button class="linkbtn" id="another" style="align-self:flex-start">Another sentence</button>'}
+    <div class="recarea">
+      <button class="rec" id="rec" aria-label="Start recording">${I.mic}</button>
+      <p class="reclbl" id="reclbl">Tap to record</p>
+      <p class="micnote" id="micnote"></p>
+    </div>`;
+  $('back').onclick = () => { stopRec(true); home(); };
+  if ($('another')) $('another').onclick = () => { state.pi++; taskView(); };
+  $('rec').onclick = () => (rec && rec.state === 'recording') ? stopRec() : startRec();
+}
+
+function checking(fromSample) {
+  view.innerHTML = `<div class="center"><div class="spin" aria-hidden="true"></div><h2>Checking</h2>
+    <ul class="steps"><li class="on" id="st1">Sound: length, loudness, noise</li><li id="st2">Words: does it match the sentence</li><li id="st3">Decision</li></ul>
+    <p class="fine">${fromSample ? 'Ready recording sent to the server.' : 'Usually 2–4 seconds.'}</p></div>`;
+  setTimeout(() => $('st2')?.classList.add('on'), 600);
+}
+
+// ---------- recording ----------
+let rec = null, chunks = [], stream = null, t0 = 0, timer = null, cancelled = false;
+function wavFrom(x) {
+  const b = new ArrayBuffer(44 + x.length * 2), d = new DataView(b);
+  const w = (o, s) => { for (let i = 0; i < 4; i++) d.setUint8(o + i, s.charCodeAt(i)); };
+  w(0, 'RIFF'); d.setUint32(4, 36 + x.length * 2, true); w(8, 'WAVE'); w(12, 'fmt '); d.setUint32(16, 16, true);
+  d.setUint16(20, 1, true); d.setUint16(22, 1, true); d.setUint32(24, 16000, true); d.setUint32(28, 32000, true);
+  d.setUint16(32, 2, true); d.setUint16(34, 16, true); w(36, 'data'); d.setUint32(40, x.length * 2, true);
+  for (let i = 0; i < x.length; i++) d.setInt16(44 + 2 * i, Math.max(-1, Math.min(1, x[i])) * 32767, true);
+  return new Blob([b], { type: 'audio/wav' });
+}
+async function startRec() {
+  try { stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } }); }
+  catch { $('micnote').textContent = 'No microphone access. Allow it in the browser, or go back and use a ready recording.'; return; }
+  chunks = []; cancelled = false; rec = new MediaRecorder(stream);
+  rec.ondataavailable = e => e.data.size && chunks.push(e.data);
+  rec.onstop = async () => { stream.getTracks().forEach(t => t.stop()); clearInterval(timer); if (cancelled) return;
+    await submit(await new Blob(chunks, { type: rec.mimeType }).arrayBuffer(), false); };
+  rec.start(); t0 = performance.now();
+  $('rec').classList.add('on'); $('rec').innerHTML = '<span class="sq"></span>'; $('rec').setAttribute('aria-label', 'Stop recording');
+  timer = setInterval(() => { const s = (performance.now() - t0) / 1000; const l = $('reclbl'); if (l) l.innerHTML = `Recording <span class="num">${s.toFixed(1)} s</span> · tap to stop`; if (s >= 30) stopRec(); }, 100);
+}
+function stopRec(cancel = false) { if (rec && rec.state === 'recording') { cancelled = cancel; rec.stop(); } }
+
+async function runSample(s) {
+  META = META || await (await fetch('samples/samples.json')).json();
+  const m = META.find(x => x.file === s.file);
+  state.sample = { prompt: m.prompt, lang: m.lang, variant: m.variant, label: s.label };
+  taskView();
+  const buf = await (await fetch('samples/' + s.file)).arrayBuffer();
+  await submit(buf, true);
+}
+
+// ---------- server ----------
+async function post(form) {
+  try { const r = await fetch(`${CFG.supabaseUrl}/functions/v1/qc-check`, { method: 'POST', headers: { Authorization: `Bearer ${CFG.anonKey}`, apikey: CFG.anonKey }, body: form }); return await r.json(); }
+  catch { return { error: 'No connection to the server. Try again.' }; }
+}
+const attempts = new Map();
+async function submit(buf, fromSample) {
+  const lang = state.sample ? state.sample.lang : state.lang, text = prompt();
+  checking(fromSample);
+  let x;
+  try { x = await decodeTo16k(buf); } catch { return problem('This audio could not be read. Please record again.'); }
+  const sig = analyzeSignal(x), phone = checkSignal(sig, text, TH);
+  const wav = wavFrom(x);
+  const key = lang + '|' + text, attempt = (attempts.get(key) || 0) + 1; attempts.set(key, attempt);
+  const form = new FormData();
+  form.append('audio', wav, 'rec.wav'); form.append('lang', lang); form.append('prompt', text); form.append('task', 'read');
+  form.append('scenario', fromSample ? 'sample_' + state.sample.variant : 'app');
+  form.append('phone', JSON.stringify({ accept: phone.accept, reasons: phone.reasons, source: fromSample ? 'sample' : 'mic', attempt, surface: 'app' }));
+  const t = performance.now();
+  const j = await post(form);
+  await new Promise(r => setTimeout(r, Math.max(0, 900 - (performance.now() - t)))); // let the steps read
+  if (j.error) return problem(j.error);
+  state.sent++;
+  result(j, { wav, form, lang, text });
+}
+
+function problem(msg) {
+  view.innerHTML = `<div class="center"><div class="big mid">${I.redo}</div><h2>Something went wrong</h2><p class="sub">${esc(msg)}</p>
+    <div class="actions"><button class="btn" id="retry">Back to the task</button></div></div>`;
+  $('retry').onclick = () => taskView();
+}
+
+function addHist(k, title, text, amt) { state.hist.push({ k, title, text, amt }); }
+
+function result(j, ctx) {
+  const sampleTag = state.sample ? `<span class="tag">Ready recording: ${esc(state.sample.label)}</span>` : '';
+  const heard = `<p class="heard">We heard: <i lang="${ctx.lang}" dir="auto">${esc(j.transcript || '(nothing)')}</i></p>`;
+  if (j.accept) {
+    state.earned += PAY; state.accepted++;
+    addHist('ok', 'Accepted', ctx.text, `+${PAY} ₸`);
+    view.innerHTML = `<div class="center">${sampleTag}<div class="big ok">${I.check}</div><h2>Accepted</h2>
+      <p class="plus num">+${PAY} ₸</p><p class="sub">Paid for <b class="num">${(j.usable_s || 0).toFixed(1)} s</b> of clear speech.${j.borderline ? ' A person may listen to it later; you keep the pay unless it is clearly wrong.' : ''}</p>
+      ${heard}
+      <div class="actions"><button class="btn" id="next">Next sentence</button><button class="btn ghost" id="home">Back to tasks</button></div></div>`;
+    $('next').onclick = () => { if (state.sample) home(); else { state.pi++; taskView(); } };
+    $('home').onclick = home;
+    return;
+  }
+  const r = (j.reasons || [])[0] || 'does not match the prompt';
+  const [title, tip] = (FIX[r] || [r, 'Please record again.']).map(s => s.replace(/\{L\}/g, LANG_EN[ctx.lang]));
+  addHist('bad', 'Record again', ctx.text, '0 ₸');
+  const canAppeal = !(j.reasons || []).includes('duplicate recording');
+  view.innerHTML = `<div class="center">${sampleTag}<div class="big bad">${I.redo}</div><h2>Please record again</h2>
+    <div class="why"><b>${esc(title)}</b><p>${esc(tip)}</p>${(j.reasons || []).length > 1 ? `<p class="fine" style="margin-top:6px">Also: ${esc(j.reasons.slice(1).map(x => (FIX[x] || [x])[0].replace(/\{L\}/g, LANG_EN[ctx.lang]).toLowerCase()).join('; '))}.</p>` : ''}</div>
+    ${heard}
+    <div class="actions"><button class="btn" id="again">Record again</button>
+    ${canAppeal ? '<button class="btn ghost" id="recheck">I read it right: check again</button>' : ''}</div>
+    <p class="fine" id="appealnote"></p></div>`;
+  $('again').onclick = () => { if (state.sample) { state.sample = null; } taskView(); };
+  if (canAppeal) $('recheck').onclick = () => recheck(j, ctx);
+}
+
+async function recheck(j, ctx) {
+  const b = $('recheck'); b.disabled = true; b.textContent = 'Checking again…';
+  const f = new FormData();
+  for (const [k, v] of ctx.form.entries()) if (k !== 'audio') f.append(k, v);
+  f.append('audio', ctx.wav, 'rec.wav'); f.append('recheck_of', String(j.id));
+  const r = await post(f);
+  if (r.error) { b.disabled = false; b.textContent = 'I read it right: check again'; $('appealnote').textContent = r.error; return; }
+  if (r.accept) {
+    state.earned += PAY; state.accepted++; state.hist[state.hist.length - 1] = { k: 'ok', title: 'Accepted on second check', text: ctx.text, amt: `+${PAY} ₸` };
+    view.innerHTML = `<div class="center"><div class="big ok">${I.check}</div><h2>Accepted on a second look</h2><p class="plus num">+${PAY} ₸</p>
+      <div class="actions"><button class="btn" id="home">Back to tasks</button></div></div>`;
+    $('home').onclick = home; return;
+  }
+  b.outerHTML = '<button class="btn dark" id="dispute">Send it to a person</button>';
+  $('appealnote').textContent = 'Checked again: still not accepted. A person can listen to it.';
+  $('dispute').onclick = async () => {
+    const d = $('dispute'); d.disabled = true; d.textContent = 'Sending…';
+    const f2 = new FormData(); f2.append('action', 'dispute'); f2.append('id', String(j.id));
+    const x = await post(f2);
+    if (x.error) { d.disabled = false; d.textContent = 'Send it to a person'; $('appealnote').textContent = x.error; return; }
+    state.hist[state.hist.length - 1] = { k: 'mid', title: 'With a person', text: ctx.text, amt: 'pending' };
+    view.innerHTML = `<div class="center"><div class="big mid">${I.person}</div><h2>Sent to a person</h2>
+      <p class="sub">Someone who speaks ${esc(LANG_EN[ctx.lang])} will listen within a day. If they accept it, you are paid ${PAY} ₸ as usual.</p>
+      <p class="fine">In this demo the request is logged for review.</p>
+      <div class="actions"><button class="btn" id="home">Back to tasks</button></div></div>`;
+    $('home').onclick = home;
+  };
+}
+
+home();
+</script>
+</body>
+</html>

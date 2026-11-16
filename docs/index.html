@@ -553,7 +553,7 @@ function wavFrom(x) {
 }
 async function startRec() {
   try {
-    stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
+    stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: true } });
   } catch (e) {
     $('micnote').textContent = 'No microphone access. Allow it in the browser, or upload a file.'; return;
   }

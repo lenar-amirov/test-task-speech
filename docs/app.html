@@ -132,6 +132,35 @@
   .btn[disabled] { opacity: .6; cursor: default; }
   .fine { font-size: 12.5px; color: var(--muted); }
 
+  .prof { display: flex; align-items: center; gap: 12px; padding: 4px 0 14px; border-bottom: 1px solid var(--line); }
+  .ava { width: 46px; height: 46px; border-radius: 50%; background: var(--lime); display: grid; place-items: center; font-weight: 800; font-size: 18px; flex: none; }
+  .prof .nm { flex: 1; min-width: 0; font-weight: 800; font-size: 17px; line-height: 1.2; }
+  .prof .nm small { display: block; font-weight: 600; font-size: 12.5px; color: var(--muted); }
+  .bal { text-align: right; }
+  .bal small { display: block; font-size: 11px; letter-spacing: .06em; color: var(--muted); font-weight: 700; }
+  .bal b { font-size: 22px; color: var(--ok); font-weight: 800; }
+  .langrow { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 12px; font-size: 13px; font-weight: 600; color: var(--muted); }
+  .tabs { display: grid; grid-template-columns: repeat(3, 1fr); background: var(--tile); border-radius: 18px; padding: 4px; margin-top: 12px; }
+  .tabs button { border: 0; background: none; border-radius: 14px; padding: 9px 4px; font-weight: 700; font-size: 13.5px; color: var(--muted); display: flex; gap: 6px; justify-content: center; align-items: center; }
+  .tabs button[aria-selected="true"] { background: #fff; color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+  .tabs .cnt { background: var(--lime); border-radius: 999px; padding: 0 7px; font-size: 12px; color: var(--ink); }
+  .filters { display: flex; gap: 8px; overflow-x: auto; margin: 12px -20px 0; padding: 0 20px 4px; scrollbar-width: none; }
+  .filters::-webkit-scrollbar { display: none; }
+  .filters button { border: 0; background: var(--tile); border-radius: 999px; padding: 9px 14px; font-weight: 700; font-size: 13.5px; display: inline-flex; gap: 6px; align-items: center; white-space: nowrap; }
+  .filters button svg { width: 15px; height: 15px; }
+  .filters button[aria-pressed="true"] { background: var(--ink); color: #fff; }
+  .card { border: 1.5px solid var(--line); background: #fff; border-radius: 22px; padding: 14px; display: flex; gap: 12px; width: 100%; text-align: left; margin-top: 10px; align-items: flex-start; }
+  .card .ic { width: 44px; height: 44px; border-radius: 14px; background: var(--tile); display: grid; place-items: center; flex: none; }
+  .card .ic svg { width: 21px; height: 21px; }
+  .card .t { flex: 1; min-width: 0; }
+  .card .t b { display: block; font-size: 16px; line-height: 1.25; }
+  .card .t > span { display: flex; gap: 5px; align-items: center; font-size: 13px; color: var(--muted); margin-top: 3px; }
+  .card .t > span svg { width: 14px; height: 14px; flex: none; }
+  .price { background: var(--lime-soft); color: var(--ok); font-weight: 800; border-radius: 999px; padding: 4px 10px; font-size: 14px; white-space: nowrap; }
+  .card .t > span.flag { display: inline-block; width: fit-content; margin-top: 8px; font-size: 11.5px; font-weight: 700; border-radius: 999px; padding: 2px 9px; background: var(--lime); color: var(--ink); }
+  .card .t > span.flag.soon { background: var(--tile); color: var(--muted); }
+  .view > * { flex-shrink: 0; }
+  .card.off .t b, .card.off .ic { opacity: .6; }
   .sheet-bg { position: absolute; inset: 0; background: rgba(0,0,0,.35); z-index: 10; display: flex; align-items: flex-end; }
   .sheet { background: var(--sheet); width: 100%; border-radius: 28px 28px 0 0; padding: 18px 20px 26px; max-height: 80%; overflow-y: auto; }
   .sheet h3 { font-size: 18px; margin-bottom: 4px; }
@@ -155,7 +184,7 @@
       <li><b>A way to push back</b>One "check again", then "send it to a person". If the person accepts it, the task is paid as usual.</li>
     </ul>
     <p class="links"><a href="index.html">How the check works and how it was measured</a></p>
-    <p class="fine" style="margin-top:14px;max-width:520px">Sentences in Spanish, Kazakh and Urdu are what the 95% / 2.7% were measured on; English and Russian are here to try it. The 75 ₸ per task is the price in the brief. Recordings are stored for this demo and the audio is deleted after 30 days.</p>
+    <p class="fine" style="margin-top:14px;max-width:520px">Task types follow the DataTasks app: Voice, Dialogue and Comparison. The two voice tasks run the live check; dialogue and comparison are shown for context. Sentences in Spanish, Kazakh and Urdu are what the 95% / 2.7% were measured on; English and Russian are here to try it. The 75 ₸ per task is the price in the brief. Recordings are stored for this demo and the audio is deleted after 30 days.</p>
   </section>
 
   <div class="phone">
@@ -181,6 +210,9 @@ const I = {
   person: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>',
   back: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>',
   globe: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.2 3 14.8 0 18M12 3c-3 3.2-3 14.8 0 18"/></svg>',
+  phone: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg>',
+  cmp: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18M8 8l-4 4 4 4M16 8l4 4-4 4"/></svg>',
+  clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
   play: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>',
 };
 const LANGS = { kk: 'Қазақша', es: 'Español', ur: 'اردو', en: 'English', ru: 'Русский' };
@@ -197,6 +229,24 @@ const PROMPTS = {
   ur: ["براہ کرم چھ بجے کے بعد مجھے فون کریں، میں ابھی ایئرپورٹ جا رہا ہوں۔", "ڈرائیور وقت پر پہنچا اور بھاری بیگ اٹھانے میں ہماری مدد کی۔",
        "اگلے موڑ سے بائیں مڑیں اور دوا خانے کے پاس رک جائیں۔", "شام کو بارش ہو تو ہم عام طور پر ٹیکسی منگواتے ہیں۔"],
 };
+// "Answer a question": free speech on a topic. The server checks language and amount of speech (demo rules, not measured).
+const QUESTIONS = {
+  en: ["What do you usually do on a day off? Answer in a few sentences.", "How do you get to work, and how long does it take?"],
+  ru: ["Чем вы обычно занимаетесь в выходной? Ответьте в нескольких предложениях.", "Как вы добираетесь до работы и сколько времени это занимает?"],
+  es: ["¿Qué sueles hacer en tu día libre? Responde con unas cuantas frases.", "¿Cómo llegas al trabajo y cuánto tiempo tardas?"],
+  kk: ["Демалыс күні әдетте немен айналысасыз? Бірнеше сөйлеммен жауап беріңіз.", "Жұмысқа қалай барасыз және ол қанша уақыт алады?"],
+  ur: ["آپ چھٹی کے دن عام طور پر کیا کرتے ہیں؟ چند جملوں میں جواب دیں۔", "آپ کام پر کیسے جاتے ہیں اور اس میں کتنا وقت لگتا ہے؟"],
+};
+// Task types as in the app: Voice (read, answer), Dialogue, Comparison. Only the voice tasks run the live check here.
+const TASKS = [
+  { id: 'read', kind: 'voice', icon: 'mic', title: 'Read a sentence', dur: 'about 10 seconds', price: 75, live: 'Live check' },
+  { id: 'answer', kind: 'voice', icon: 'mic', title: 'Answer a question', dur: '20–40 seconds', price: 75, live: 'Live check, demo rules' },
+  { id: 'dialog', kind: 'dialog', icon: 'phone', title: 'Free dialogue', dur: '5–20 minutes', price: 150,
+    info: 'Two people talk on a call, each recorded on their own phone. The same sound checks would run on each side, plus the language of both speakers and who talks when. Not built in this prototype.' },
+  { id: 'compare', kind: 'compare', icon: 'cmp', title: 'Compare two recordings', dur: 'about 1 minute',
+    info: 'A listening task: the contributor picks the better of two recordings. Nothing is recorded, so this check does not apply. Not built in this prototype.' },
+];
+const KINDS = [['all', 'All'], ['voice', 'Voice', 'mic'], ['dialog', 'Dialogue', 'phone'], ['compare', 'Comparison', 'cmp']];
 // What a contributor is told: what went wrong, and what to do differently.
 const FIX = {
   "too short or cut off": ["The recording stops too early", "Read the whole sentence, then tap stop."],
@@ -207,6 +257,8 @@ const FIX = {
   "wrong language": ["This doesn't sound like {L}", "Read the sentence in {L}, as written."],
   "does not match the prompt": ["The words don't match the sentence", "Read exactly what is on the screen, word for word."],
   "duplicate recording": ["This exact recording was already sent", "Each task needs a new recording."],
+  "too little speech": ["Too short", "Talk for 20–40 seconds: a few full sentences."],
+  "too few words": ["We heard too few words", "Answer in a few full sentences."],
 };
 const SAMPLES = [
   { file: 'clean_es.wav', label: 'Read well', lang: 'es' },
@@ -223,27 +275,46 @@ const SAMPLES = [
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const view = $('view');
-const state = { lang: 'en', pi: 0, earned: 0, accepted: 0, sent: 0, hist: [], sample: null };
+const state = { lang: 'en', pi: 0, qi: 0, task: 'read', tab: 'available', kind: 'all', earned: 0, accepted: 0, sent: 0, hist: [], sample: null };
 let META = null;
-const prompt = () => state.sample ? state.sample.prompt : PROMPTS[state.lang][state.pi % PROMPTS[state.lang].length];
+const prompt = () => state.sample ? state.sample.prompt : state.task === 'answer' ? QUESTIONS[state.lang][state.qi % 2] : PROMPTS[state.lang][state.pi % PROMPTS[state.lang].length];
 const tick = () => { const d = new Date(); $('clock').textContent = d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0'); };
 tick(); setInterval(tick, 30000);
 
 // ---------- screens ----------
 function home() {
   state.sample = null;
+  const review = state.hist.filter(h => h.k === 'mid'), done = state.hist.filter(h => h.k === 'ok');
+  const tabs = [['available', 'Available', TASKS.length], ['review', 'In review', review.length], ['done', 'Done', done.length]];
+  let body = '';
+  if (state.tab === 'available') {
+    body = `<div class="filters" role="group" aria-label="Task type">${KINDS.map(([k, l, ic]) => `<button data-k="${k}" aria-pressed="${state.kind === k}">${ic ? I[ic] : ''}${l}</button>`).join('')}</div>
+      ${TASKS.filter(t => state.kind === 'all' || t.kind === state.kind).map(t => `<button class="card${t.live ? '' : ' off'}" data-t="${t.id}">
+        <span class="ic">${I[t.icon]}</span>
+        <span class="t"><b>${t.title}</b><span>Language: ${esc(LANG_EN[state.lang])}</span><span>${I.clock}${t.dur}</span>
+          <span class="flag${t.live ? '' : ' soon'}">${t.live || 'Not in this prototype'}</span></span>
+        ${t.price ? `<span class="price">${t.price} ₸</span>` : ''}</button>`).join('')}
+      <button class="linkbtn" id="go-sample" style="align-self:flex-start;margin-top:6px">No microphone? Use a ready recording</button>`;
+  } else {
+    const list = state.tab === 'review' ? review : done;
+    body = list.length ? `<ul class="hist" style="margin-top:8px">${list.slice().reverse().map(h => `<li><span class="dot ${h.k}">${h.k === 'ok' ? I.check : I.person}</span><span class="w">${esc(h.title)}<span dir="auto">${esc(h.text)}</span></span><span class="amt">${h.amt}</span></li>`).join('')}</ul>`
+      : `<p class="empty" style="margin-top:14px">${state.tab === 'review' ? 'Recordings a person is listening to after an appeal show here.' : 'Accepted recordings show here.'}</p>`;
+  }
   view.innerHTML = `
-    <div class="appbar"><h2>Tasks</h2><button class="chip" id="langbtn" aria-label="Recording language">${I.globe}${esc(LANGS[state.lang])}</button></div>
-    <div class="earn"><small>Earned today</small><b class="num">${state.earned} ₸</b><span class="num">${state.accepted} accepted · ${state.sent} sent</span></div>
-    <p class="sec">For you</p>
-    <button class="task" id="go-read"><span class="ic">${I.mic}</span><span class="t"><b>Read a sentence</b><span>${esc(LANG_EN[state.lang])} · about 10 seconds</span></span><span class="pay">${PAY} ₸</span></button>
-    <button class="task" disabled><span class="ic">${I.chat}</span><span class="t"><b>Talk freely</b><span>Coming soon · 30 seconds</span></span><span class="pay">—</span></button>
-    <button class="linkbtn" id="go-sample" style="align-self:flex-start">No microphone? Use a ready recording</button>
-    <p class="sec">Today</p>
-    ${state.hist.length ? `<ul class="hist">${state.hist.slice().reverse().map(h => `<li><span class="dot ${h.k}">${h.k === 'ok' ? I.check : h.k === 'mid' ? I.person : I.redo}</span><span class="w">${esc(h.title)}<span dir="auto">${esc(h.text)}</span></span><span class="amt">${h.amt}</span></li>`).join('')}</ul>` : '<p class="empty">Nothing yet. Your recordings and their status will show here.</p>'}`;
+    <div class="prof"><span class="ava">D</span><span class="nm">Demo contributor<small>${state.accepted} accepted · ${state.sent} sent today</small></span>
+      <span class="bal"><small>BALANCE</small><b class="num">${state.earned} ₸</b></span></div>
+    <div class="langrow">Recording language<button class="chip" id="langbtn">${I.globe}${esc(LANGS[state.lang])}</button></div>
+    <div class="tabs" role="tablist">${tabs.map(([k, l, n]) => `<button role="tab" data-tab="${k}" aria-selected="${state.tab === k}">${l}${n ? ` <span class="cnt num">${n}</span>` : ''}</button>`).join('')}</div>
+    ${body}`;
   $('langbtn').onclick = langSheet;
-  $('go-read').onclick = () => taskView();
-  $('go-sample').onclick = sampleSheet;
+  view.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { state.tab = b.dataset.tab; home(); });
+  view.querySelectorAll('[data-k]').forEach(b => b.onclick = () => { state.kind = b.dataset.k; home(); });
+  view.querySelectorAll('[data-t]').forEach(b => b.onclick = () => {
+    const t = TASKS.find(x => x.id === b.dataset.t);
+    if (t.live) { state.task = t.id; taskView(); }
+    else sheet(`<h3>${t.title}</h3><p style="margin-top:6px;color:var(--ink-2)">${t.info}</p><div class="actions" style="margin-top:16px"><button class="btn ghost" id="ok">OK</button></div>`, bg => bg.querySelector('#ok').onclick = () => bg.remove());
+  });
+  if ($('go-sample')) $('go-sample').onclick = sampleSheet;
 }
 
 function sheet(html, bind) {
@@ -266,20 +337,21 @@ function sampleSheet() {
 
 function taskView() {
   const s = state.sample;
-  const lang = s ? s.lang : state.lang;
+  const lang = s ? s.lang : state.lang, ans = state.task === 'answer';
   view.innerHTML = `
-    <div class="appbar"><button class="icon-btn" id="back" aria-label="Back">${I.back}</button><h2 style="flex:1">Read a sentence</h2><span class="pay" style="font-weight:800">${PAY} ₸</span></div>
-    <p class="prompt-lbl">Read aloud in ${esc(LANG_EN[lang])}</p>
+    <div class="appbar"><button class="icon-btn" id="back" aria-label="Back">${I.back}</button><h2 style="flex:1">${ans ? 'Answer a question' : 'Read a sentence'}</h2><span class="price">${PAY} ₸</span></div>
+    <p class="prompt-lbl">${ans ? 'Answer out loud in ' : 'Read aloud in '}${esc(LANG_EN[lang])}</p>
     <div class="prompt" lang="${lang}" dir="auto">${esc(prompt())}</div>
-    <div class="tips"><span>Quiet place</span><span>Phone about 20 cm away</span><span>Read it all</span></div>
-    ${s ? '' : '<button class="linkbtn" id="another" style="align-self:flex-start">Another sentence</button>'}
+    <div class="tips">${ans ? '<span>Quiet place</span><span>Talk 20–40 seconds</span><span>Your own words</span>' : '<span>Quiet place</span><span>Phone about 20 cm away</span><span>Read it all</span>'}</div>
+    ${ans ? '<p class="fine" style="margin-top:10px">Checked: the language and how much you speak. These rules are a demo and were not measured.</p>' : ''}
+    ${s ? '' : `<button class="linkbtn" id="another" style="align-self:flex-start">${ans ? 'Another question' : 'Another sentence'}</button>`}
     <div class="recarea">
       <button class="rec" id="rec" aria-label="Start recording">${I.mic}</button>
       <p class="reclbl" id="reclbl">Tap to record</p>
       <p class="micnote" id="micnote"></p>
     </div>`;
   $('back').onclick = () => { stopRec(true); home(); };
-  if ($('another')) $('another').onclick = () => { state.pi++; taskView(); };
+  if ($('another')) $('another').onclick = () => { ans ? state.qi++ : state.pi++; taskView(); };
   $('rec').onclick = () => (rec && rec.state === 'recording') ? stopRec() : startRec();
 }
 
@@ -310,13 +382,14 @@ async function startRec() {
     await submit(await new Blob(chunks, { type: rec.mimeType }).arrayBuffer(), false); };
   rec.start(); t0 = performance.now();
   $('rec').classList.add('on'); $('rec').innerHTML = '<span class="sq"></span>'; $('rec').setAttribute('aria-label', 'Stop recording');
-  timer = setInterval(() => { const s = (performance.now() - t0) / 1000; const l = $('reclbl'); if (l) l.innerHTML = `Recording <span class="num">${s.toFixed(1)} s</span> · tap to stop`; if (s >= 30) stopRec(); }, 100);
+  timer = setInterval(() => { const s = (performance.now() - t0) / 1000; const l = $('reclbl'); if (l) l.innerHTML = `Recording <span class="num">${s.toFixed(1)} s</span> · tap to stop`; if (s >= (state.task === 'answer' ? 60 : 30)) stopRec(); }, 100);
 }
 function stopRec(cancel = false) { if (rec && rec.state === 'recording') { cancelled = cancel; rec.stop(); } }
 
 async function runSample(s) {
   META = META || await (await fetch('samples/samples.json')).json();
   const m = META.find(x => x.file === s.file);
+  state.task = 'read';
   state.sample = { prompt: m.prompt, lang: m.lang, variant: m.variant, label: s.label };
   taskView();
   const buf = await (await fetch('samples/' + s.file)).arrayBuffer();
@@ -334,12 +407,12 @@ async function submit(buf, fromSample) {
   checking(fromSample);
   let x;
   try { x = await decodeTo16k(buf); } catch { return problem('This audio could not be read. Please record again.'); }
-  const sig = analyzeSignal(x), phone = checkSignal(sig, text, TH);
+  const sig = analyzeSignal(x), phone = state.task === 'read' ? checkSignal(sig, text, TH) : { accept: null, reasons: [] };
   const wav = wavFrom(x);
   const key = lang + '|' + text, attempt = (attempts.get(key) || 0) + 1; attempts.set(key, attempt);
   const form = new FormData();
-  form.append('audio', wav, 'rec.wav'); form.append('lang', lang); form.append('prompt', text); form.append('task', 'read');
-  form.append('scenario', fromSample ? 'sample_' + state.sample.variant : 'app');
+  form.append('audio', wav, 'rec.wav'); form.append('lang', lang); form.append('prompt', text); form.append('task', state.task === 'answer' ? 'free' : 'read');
+  form.append('scenario', fromSample ? 'sample_' + state.sample.variant : 'app_' + state.task);
   form.append('phone', JSON.stringify({ accept: phone.accept, reasons: phone.reasons, source: fromSample ? 'sample' : 'mic', attempt, surface: 'app' }));
   const t = performance.now();
   const j = await post(form);
@@ -366,14 +439,15 @@ function result(j, ctx) {
     view.innerHTML = `<div class="center">${sampleTag}<div class="big ok">${I.check}</div><h2>Accepted</h2>
       <p class="plus num">+${PAY} ₸</p><p class="sub">Paid for <b class="num">${(j.usable_s || 0).toFixed(1)} s</b> of clear speech.${j.borderline ? ' A person may listen to it later; you keep the pay unless it is clearly wrong.' : ''}</p>
       ${heard}
-      <div class="actions"><button class="btn" id="next">Next sentence</button><button class="btn ghost" id="home">Back to tasks</button></div></div>`;
-    $('next').onclick = () => { if (state.sample) home(); else { state.pi++; taskView(); } };
+      <div class="actions"><button class="btn" id="next">${state.task === 'answer' ? 'Next question' : 'Next sentence'}</button><button class="btn ghost" id="home">Back to tasks</button></div></div>`;
+    $('next').onclick = () => { if (state.sample) home(); else { state.task === 'answer' ? state.qi++ : state.pi++; taskView(); } };
     $('home').onclick = home;
     return;
   }
   const r = (j.reasons || [])[0] || 'does not match the prompt';
+  if (state.tab !== 'available') state.tab = 'available';
   const [title, tip] = (FIX[r] || [r, 'Please record again.']).map(s => s.replace(/\{L\}/g, LANG_EN[ctx.lang]));
-  addHist('bad', 'Record again', ctx.text, '0 ₸');
+  state.lastBad = { k: 'bad', title: 'Record again', text: ctx.text, amt: '0 ₸' };
   const canAppeal = !(j.reasons || []).includes('duplicate recording');
   view.innerHTML = `<div class="center">${sampleTag}<div class="big bad">${I.redo}</div><h2>Please record again</h2>
     <div class="why"><b>${esc(title)}</b><p>${esc(tip)}</p>${(j.reasons || []).length > 1 ? `<p class="fine" style="margin-top:6px">Also: ${esc(j.reasons.slice(1).map(x => (FIX[x] || [x])[0].replace(/\{L\}/g, LANG_EN[ctx.lang]).toLowerCase()).join('; '))}.</p>` : ''}</div>
@@ -393,7 +467,7 @@ async function recheck(j, ctx) {
   const r = await post(f);
   if (r.error) { b.disabled = false; b.textContent = 'I read it right: check again'; $('appealnote').textContent = r.error; return; }
   if (r.accept) {
-    state.earned += PAY; state.accepted++; state.hist[state.hist.length - 1] = { k: 'ok', title: 'Accepted on second check', text: ctx.text, amt: `+${PAY} ₸` };
+    state.earned += PAY; state.accepted++; addHist('ok', 'Accepted on second check', ctx.text, `+${PAY} ₸`);
     view.innerHTML = `<div class="center"><div class="big ok">${I.check}</div><h2>Accepted on a second look</h2><p class="plus num">+${PAY} ₸</p>
       <div class="actions"><button class="btn" id="home">Back to tasks</button></div></div>`;
     $('home').onclick = home; return;
@@ -405,9 +479,9 @@ async function recheck(j, ctx) {
     const f2 = new FormData(); f2.append('action', 'dispute'); f2.append('id', String(j.id));
     const x = await post(f2);
     if (x.error) { d.disabled = false; d.textContent = 'Send it to a person'; $('appealnote').textContent = x.error; return; }
-    state.hist[state.hist.length - 1] = { k: 'mid', title: 'With a person', text: ctx.text, amt: 'pending' };
+    addHist('mid', 'With a person', ctx.text, 'pending');
     view.innerHTML = `<div class="center"><div class="big mid">${I.person}</div><h2>Sent to a person</h2>
-      <p class="sub">Someone who speaks ${esc(LANG_EN[ctx.lang])} will listen within a day. If they accept it, you are paid ${PAY} ₸ as usual.</p>
+      <p class="sub">It is in the "In review" tab. Someone who speaks ${esc(LANG_EN[ctx.lang])} will listen within a day. If they accept it, you are paid ${PAY} ₸ as usual.</p>
       <p class="fine">In this demo the request is logged for review.</p>
       <div class="actions"><button class="btn" id="home">Back to tasks</button></div></div>`;
     $('home').onclick = home;

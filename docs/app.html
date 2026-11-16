@@ -276,6 +276,10 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const view = $('view');
 const state = { lang: 'en', pi: 0, qi: 0, task: 'read', tab: 'available', kind: 'all', earned: 0, accepted: 0, sent: 0, hist: [], sample: null };
+// Keep the contributor's tasks across reloads, in this browser only (as the app would keep them in the account).
+const SAVE_KEY = 'dt-contributor-v1';
+try { const v = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); if (v) Object.assign(state, { lang: v.lang || 'en', accepted: v.accepted || 0, sent: v.sent || 0, hist: Array.isArray(v.hist) ? v.hist : [] }); } catch {}
+const save = () => { try { localStorage.setItem(SAVE_KEY, JSON.stringify({ lang: state.lang, accepted: state.accepted, sent: state.sent, hist: state.hist.slice(-50) })); } catch {} };
 let META = null;
 const prompt = () => state.sample ? state.sample.prompt : state.task === 'answer' ? QUESTIONS[state.lang][state.qi % 2] : PROMPTS[state.lang][state.pi % PROMPTS[state.lang].length];
 const tick = () => { const d = new Date(); $('clock').textContent = d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0'); };
@@ -283,7 +287,7 @@ tick(); setInterval(tick, 30000);
 
 // ---------- screens ----------
 function home() {
-  state.sample = null;
+  state.sample = null; save();
   const review = state.hist.filter(h => h.k === 'mid'), done = state.hist.filter(h => h.k === 'ok');
   const tabs = [['available', 'Available', TASKS.length], ['review', 'In review', review.length], ['done', 'Done', done.length]];
   let body = '';
@@ -427,7 +431,7 @@ function problem(msg) {
   $('retry').onclick = () => taskView();
 }
 
-function addHist(k, title, text, amt) { state.hist.push({ k, title, text, amt }); }
+function addHist(k, title, text, amt) { state.hist.push({ k, title, text, amt }); save(); }
 
 function result(j, ctx) {
   const sampleTag = state.sample ? `<span class="tag">Ready recording: ${esc(state.sample.label)}</span>` : '';

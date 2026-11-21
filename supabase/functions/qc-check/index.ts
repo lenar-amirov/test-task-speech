@@ -10,6 +10,9 @@ import postgres from "npm:postgres@3.4.4";
 import { analyzeSignal, decodeWav, encodeWav, freeVerdict, pcmSha256, TH, trimEdges, verdict } from "./qc.ts";
 import { ASR_MODEL, transcribe } from "./asr.ts";
 
+// Live demo only: loudness floor lowered from the measured -42 to -60 dBFS, so a clean but faint mic (e.g. an iPad)
+// is not rejected; noise is still caught by the SNR rule. Measured results and qc-eval keep the frozen TH.
+const LIVE_TH = { ...TH, min_speech_dbfs: -60.0 };
 const LANGS = new Set(["en", "ru", "es", "kk", "ur"]);
 const MAX_BYTES = 2_200_000; // ~65 s of 16 kHz 16-bit mono
 const MAX_SECONDS = 65;
@@ -152,7 +155,7 @@ Deno.serve(async (req) => {
     t = lap("asr", t);
 
     // 4) decision
-    const v = task === "free" ? freeVerdict(sig, lang, asr, TH) : { ...verdict(sig, prompt, lang, asr, TH), words: null };
+    const v = task === "free" ? freeVerdict(sig, lang, asr, LIVE_TH) : { ...verdict(sig, prompt, lang, asr, LIVE_TH), words: null };
     t = lap("decision", t);
 
     // 5) log every decision: this table is what the buyer report and threshold tuning are built from

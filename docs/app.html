@@ -257,6 +257,8 @@ const FIX = {
   "too short or cut off": ["The recording stops too early", "Read the whole sentence, then tap stop."],
   "clipping": ["Too loud: the sound is distorted", "Hold the phone a little further away, about 20 cm."],
   "too quiet": ["We could barely hear you", "Speak at your normal volume, phone about 20 cm away."],
+  // Faint but clean (voice far above the background): the microphone's input level is low, not the speaker.
+  "mic level low": ["Your microphone is set very low", "The sound is clean, just faint. Turn up the input level in your sound settings, or pick another microphone, then record again."],
   "too noisy": ["Too much noise around you", "Find a quieter spot: close the window, turn off music."],
   "long silence": ["There is a long pause in the middle", "Read the sentence without stopping for long."],
   "wrong language": ["This doesn't sound like {L}", "Read the sentence in {L}, as written."],
@@ -452,7 +454,8 @@ function result(j, ctx) {
     $('home').onclick = home;
     return;
   }
-  const r = (j.reasons || [])[0] || 'does not match the prompt';
+  let r = (j.reasons || [])[0] || 'does not match the prompt';
+  if (r === 'too quiet' && j.signal && j.signal.snr_db >= 25) r = 'mic level low';
   if (state.tab !== 'available') state.tab = 'available';
   const [title, tip] = (FIX[r] || [r, 'Please record again.']).map(s => s.replace(/\{L\}/g, LANG_EN[ctx.lang]));
   

@@ -205,7 +205,7 @@
 <script src="config.js"></script>
 <script>
 const CFG = window.QC_CONFIG || {};
-const TH = { min_speech_ratio: 0.35, chars_per_s: 14.0, max_clip_ratio: 0.001, min_speech_dbfs: -42.0, min_snr_db: 10, max_edge_silence_s: 4.0, max_gap_s: 3.0 };
+const TH = { min_speech_ratio: 0.35, chars_per_s: 14.0, max_clip_ratio: 0.001, min_speech_dbfs: -60.0, min_snr_db: 10, max_edge_silence_s: 4.0, max_gap_s: 3.0 };
 const RECHECK = () => state.task === 'answer' ? 'I did it right: check again' : 'I read it right: check again';
 const I = {
   mic: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>',
@@ -257,6 +257,8 @@ const FIX = {
   "too short or cut off": ["The recording stops too early", "Read the whole sentence, then tap stop."],
   "clipping": ["Too loud: the sound is distorted", "Hold the phone a little further away, about 20 cm."],
   "too quiet": ["We could barely hear you", "Speak at your normal volume, phone about 20 cm away."],
+  // Faint but clean (voice far above the background): the microphone's input level is low, not the speaker.
+  "mic level low": ["Your microphone is set very low", "The sound is clean, just faint. Turn up the input level in your sound settings, or pick another microphone, then record again."],
   "too noisy": ["Too much noise around you", "Find a quieter spot: close the window, turn off music."],
   "long silence": ["There is a long pause in the middle", "Read the sentence without stopping for long."],
   "wrong language": ["This doesn't sound like {L}", "Read the sentence in {L}, as written."],
@@ -452,7 +454,8 @@ function result(j, ctx) {
     $('home').onclick = home;
     return;
   }
-  const r = (j.reasons || [])[0] || 'does not match the prompt';
+  let r = (j.reasons || [])[0] || 'does not match the prompt';
+  if (r === 'too quiet' && j.signal && j.signal.snr_db >= 25) r = 'mic level low';
   if (state.tab !== 'available') state.tab = 'available';
   const [title, tip] = (FIX[r] || [r, 'Please record again.']).map(s => s.replace(/\{L\}/g, LANG_EN[ctx.lang]));
   
